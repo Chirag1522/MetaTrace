@@ -1,0 +1,214 @@
+{
+  "file": "./uploads\\Canon_DIGITAL_IXUS_400.jpg",
+  "scan_time": "2026-01-31T03:49:48.500451+00:00",
+  "checks": {
+    "file_magic": {
+      "magic_header": "ffd8ffe000104a46494600010101004800480000ffe10cad4578696600004949",
+      "detected_type": "jpeg",
+      "filesize": 9198
+    },
+    "exif_piexif": {
+      "0th": {
+        "Make": "Canon",
+        "Model": "Canon DIGITAL IXUS 400",
+        "XResolution": [
+          72,
+          1
+        ],
+        "YResolution": [
+          72,
+          1
+        ],
+        "ResolutionUnit": 2,
+        "Software": "GIMP 2.4.5",
+        "DateTime": "2008:07:31 17:15:01",
+        "YCbCrPositioning": 1,
+        "ExifTag": 200
+      },
+      "Exif": {
+        "ExposureTime": [
+          1,
+          200
+        ],
+        "FNumber": [
+          100,
+          10
+        ],
+        "ExifVersion": "0220",
+        "DateTimeOriginal": "2004:08:27 13:52:55",
+        "DateTimeDigitized": "2004:08:27 13:52:55",
+        "ComponentsConfiguration": "\u0001\u0002\u0003\u0000",
+        "CompressedBitsPerPixel": [
+          3,
+          1
+        ],
+        "ShutterSpeedValue": [
+          245,
+          32
+        ],
+        "ApertureValue": [
+          213,
+          32
+        ],
+        "ExposureBiasValue": [
+          0,
+          3
+        ],
+        "MaxApertureValue": [
+          128,
+          32
+        ],
+        "MeteringMode": 5,
+        "Flash": 24,
+        "FocalLength": [
+          494,
+          32
+        ],
+        "MakerNote": "\u000e\u0000\u0000\u0000\u0003\u0000\u0006\u0000\u0000\u0000L\u0003\u0000\u0000\u0000\u0000\u0003\u0000\u0004\u0000\u0000\u0000X\u0003\u0000\u0000\u0001\u0000\u0003\u0000.\u0000\u0000\u0000`\u0003\u0000\u0000\u0002\u0000\u0003\u0000\u0004\u0000\u0000\u0000\ufffd\u0003\u0000\u0000\u0003\u0000\u0003\u0000\u0004\u0000\u0000\u0000\ufffd\u0003\u0000\u0000\u0004\u0000\u0003\u0000\"\u0000\u0000\u0000\ufffd\u0003\u0000\u0000\u0006\u0000\u0002\u0000 \u0000\u0000\u0000\u0010\u0004\u0000\u0000\u0007\u0000\u0002\u0000\u0018\u0000\u0000\u00000\u0004\u0000\u0000\b\u0000\u0004\u0000\u0001\u0000\u0000\u0000y\ufffd\u0012\u0000\t\u0000\u0002\u0000 \u0000\u0000\u0000H\u0004\u0000\u0000\r\u0000\u0003\u0000\"\u0000\u0000\u0000h\u0004\u0000\u0000\u0010\u0000\u0004\u0000\u0001\u0000\u0000\u0000\u0000\u0000'\u0001\u0012\u0000\u0003\u0000\u001c\u0000\u0000\u0000\ufffd\u0004\u0000\u0000\u0013\u0000\u0003\u0000\u0004\u0000\u0000\u0000\ufffd\u0004\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\\\u0000\u0002\u0000\u0000\u0000\u0003\u0000\u0001\u0000\u0000\u0000\u0000\u0000\u0004\u0000\u0000\u0000\u0001\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u000f\u0000\u0003\u0000\u0001\u0000\u0001@\u0000\u0000\ufffd\ufffd\ufffd\ufffd\ufffd\u0002\ufffd\u0000 \u0000\ufffd\u0000\ufffd\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\ufffd\ufffd\u0000\u0000\ufffd\b\ufffd\b\u0000\u0000\u0001\u0000\u0000\u0000\u0000\u0000\ufffd\u007f\u0000\u0000\u0000\u0000\u0000\u0000\u0002\u0000\ufffd\u0001\u001e\u0001\ufffd\u0000\u0000\u0004\u0000\u0000\u0000\u0000\u0000\u0000D\u0000\u0000\u0000\ufffd\u0000O\u0001\ufffd\u0000\ufffd\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0004\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0001\u0000\ufffd\u0000\u0000\u0000\ufffd\u0000\ufffd\u0000\u0000\u0000\u0000\u0000\u0000\u0000\ufffd\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000IMG:DIGITAL IXUS 400 JPEG\u0000\u0000\u0000\u0000\u0000\u0000\u0000Firmware Version 1.00\u0000\u0000\u0000Jean-Pierre Grignon\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000D\u0000\t\u0000\ufffd\u0000\ufffd\u0000\ufffd\u0000\ufffd\u0000\ufffd\u0000\ufffd\u0000\ufffd\u0000\ufffd\u0000\ufffd\u0000@\u0000\u0000\u0000\u0000\u0000q\u0000\u0000\u0000\u0000\u0000\n\u0000\u0005\u0000\u0001\u0000\n\u0000Y\u0000K\u0001\u0007\u0000\ufffd\ufffd\ufffd\u0003\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\ufffd\u0000\u0000\u0000\u0000\u0000\t\u0000\t\u0000\ufffd\b\ufffd\u0006\ufffd\b\ufffd\u0000\ufffd\u0001&\u0000f\ufffd\u0000\u0000\ufffd\u0001f\ufffd\u0000\u0000\ufffd\u0001f\ufffd\u0000\u0000\ufffd\u0001\ufffd\ufffd\ufffd\ufffd\ufffd\ufffd\u0000\u0000\u0000\u0000\u0000\u0000)\u0000)\u0000)\u0000\b\u0000\u0003\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000",
+        "FlashpixVersion": "0100",
+        "ColorSpace": 1,
+        "PixelXDimension": 100,
+        "PixelYDimension": 75,
+        "InteroperabilityTag": 1284,
+        "FocalPlaneXResolution": [
+          2272000,
+          280
+        ],
+        "FocalPlaneYResolution": [
+          1704000,
+          210
+        ],
+        "FocalPlaneResolutionUnit": 2,
+        "SensingMethod": 2,
+        "FileSource": "\u0003",
+        "CustomRendered": 1,
+        "ExposureMode": 0,
+        "WhiteBalance": 0,
+        "DigitalZoomRatio": [
+          2272,
+          2272
+        ],
+        "SceneCaptureType": 0
+      },
+      "GPS": {},
+      "Interop": {
+        "InteroperabilityIndex": "R98"
+      },
+      "1st": {
+        "Compression": 6,
+        "XResolution": [
+          72,
+          1
+        ],
+        "YResolution": [
+          72,
+          1
+        ],
+        "ResolutionUnit": 2,
+        "JPEGInterchangeFormat": 1432,
+        "JPEGInterchangeFormatLength": 1805
+      }
+    },
+    "exif_exifread": {
+      "Image Make": "Canon",
+      "Image Model": "Canon DIGITAL IXUS 400",
+      "Image XResolution": "72",
+      "Image YResolution": "72",
+      "Image ResolutionUnit": "Pixels/Inch",
+      "Image Software": "GIMP 2.4.5",
+      "Image DateTime": "2008:07:31 17:15:01",
+      "Image YCbCrPositioning": "Centered",
+      "Image ExifOffset": "200",
+      "Thumbnail Compression": "JPEG (old-style)",
+      "Thumbnail XResolution": "72",
+      "Thumbnail YResolution": "72",
+      "Thumbnail ResolutionUnit": "Pixels/Inch",
+      "Thumbnail JPEGInterchangeFormat": "1432",
+      "Thumbnail JPEGInterchangeFormatLength": "1805",
+      "EXIF ExposureTime": "1/200",
+      "EXIF FNumber": "10",
+      "EXIF ExifVersion": "0220",
+      "EXIF DateTimeOriginal": "2004:08:27 13:52:55",
+      "EXIF DateTimeDigitized": "2004:08:27 13:52:55",
+      "EXIF ComponentsConfiguration": "YCbCr",
+      "EXIF CompressedBitsPerPixel": "3",
+      "EXIF ShutterSpeedValue": "245/32",
+      "EXIF ApertureValue": "213/32",
+      "EXIF ExposureBiasValue": "0",
+      "EXIF MaxApertureValue": "4",
+      "EXIF MeteringMode": "Pattern",
+      "EXIF Flash": "Flash did not fire, auto mode",
+      "EXIF FocalLength": "247/16",
+      "EXIF FlashPixVersion": "0100",
+      "EXIF ColorSpace": "sRGB",
+      "EXIF ExifImageWidth": "100",
+      "EXIF ExifImageLength": "75",
+      "Interoperability InteroperabilityIndex": "R98",
+      "Interoperability InteroperabilityVersion": "[48, 49, 48, 48]",
+      "Interoperability RelatedImageWidth": "2272",
+      "Interoperability RelatedImageLength": "1704",
+      "EXIF InteroperabilityOffset": "1284",
+      "EXIF FocalPlaneXResolution": "56800/7",
+      "EXIF FocalPlaneYResolution": "56800/7",
+      "EXIF FocalPlaneResolutionUnit": "2",
+      "EXIF SensingMethod": "One-chip color area",
+      "EXIF FileSource": "Digital Camera",
+      "EXIF CustomRendered": "Custom",
+      "EXIF ExposureMode": "Auto Exposure",
+      "EXIF WhiteBalance": "Auto",
+      "EXIF DigitalZoomRatio": "1",
+      "EXIF SceneCaptureType": "Standard",
+      "JPEGThumbnail": "b'\\xff\\xd8\\xff\\xe0\\x00\\x10JFIF\\x00\\x01\\x01\\x00\\x00\\x01\\x00\\x01\\x00\\x00\\xff\\xdb\\x00C\\x00\\x0c\\t\\t\\x0b\\t\\x08\\x0c\\x0b\\n\\x0b\\x0e\\r\\x0c\\x0f\\x13\\x1f\\x14\\x13\\x11\\x11\\x13&\\x1b\\x1d\\x17\\x1f-(0/,(,+28H=25D6+,>U?DJLPQP0<X^WN^HOPM\\xff\\xdb\\x00C\\x01\\r\\x0e\\x0e\\x13\\x10\\x13%\\x14\\x14%M3,3MMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMM\\xff\\xc0\\x00\\x11\\x08\\x008\\x00K\\x03\\x01\"\\x00\\x02\\x11\\x01\\x03\\x11\\x01\\xff\\xc4\\x00\\x1f\\x00\\x00\\x01\\x05\\x01\\x01\\x01\\x01\\x01\\x01\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x01\\x02\\x03\\x04\\x05\\x06\\x07\\x08\\t\\n\\x0b\\xff\\xc4\\x00\\xb5\\x10\\x00\\x02\\x01\\x03\\x03\\x02\\x04\\x03\\x05\\x05\\x04\\x04\\x00\\x00\\x01}\\x01\\x02\\x03\\x00\\x04\\x11\\x05\\x12!1A\\x06\\x13Qa\\x07\"q\\x142\\x81\\x91\\xa1\\x08#B\\xb1\\xc1\\x15R\\xd1\\xf0$3br\\x82\\t\\n\\x16\\x17\\x18\\x19\\x1a%&\\'()*456789:CDEFGHIJSTUVWXYZcdefghijstuvwxyz\\x83\\x84\\x85\\x86\\x87\\x88\\x89\\x8a\\x92\\x93\\x94\\x95\\x96\\x97\\x98\\x99\\x9a\\xa2\\xa3\\xa4\\xa5\\xa6\\xa7\\xa8\\xa9\\xaa\\xb2\\xb3\\xb4\\xb5\\xb6\\xb7\\xb8\\xb9\\xba\\xc2\\xc3\\xc4\\xc5\\xc6\\xc7\\xc8\\xc9\\xca\\xd2\\xd3\\xd4\\xd5\\xd6\\xd7\\xd8\\xd9\\xda\\xe1\\xe2\\xe3\\xe4\\xe5\\xe6\\xe7\\xe8\\xe9\\xea\\xf1\\xf2\\xf3\\xf4\\xf5\\xf6\\xf7\\xf8\\xf9\\xfa\\xff\\xc4\\x00\\x1f\\x01\\x00\\x03\\x01\\x01\\x01\\x01\\x01\\x01\\x01\\x01\\x01\\x00\\x00\\x00\\x00\\x00\\x00\\x01\\x02\\x03\\x04\\x05\\x06\\x07\\x08\\t\\n\\x0b\\xff\\xc4\\x00\\xb5\\x11\\x00\\x02\\x01\\x02\\x04\\x04\\x03\\x04\\x07\\x05\\x04\\x04\\x00\\x01\\x02w\\x00\\x01\\x02\\x03\\x11\\x04\\x05!1\\x06\\x12AQ\\x07aq\\x13\"2\\x81\\x08\\x14B\\x91\\xa1\\xb1\\xc1\\t#3R\\xf0\\x15br\\xd1\\n\\x16$4\\xe1%\\xf1\\x17\\x18\\x19\\x1a&\\'()*56789:CDEFGHIJSTUVWXYZcdefghijstuvwxyz\\x82\\x83\\x84\\x85\\x86\\x87\\x88\\x89\\x8a\\x92\\x93\\x94\\x95\\x96\\x97\\x98\\x99\\x9a\\xa2\\xa3\\xa4\\xa5\\xa6\\xa7\\xa8\\xa9\\xaa\\xb2\\xb3\\xb4\\xb5\\xb6\\xb7\\xb8\\xb9\\xba\\xc2\\xc3\\xc4\\xc5\\xc6\\xc7\\xc8\\xc9\\xca\\xd2\\xd3\\xd4\\xd5\\xd6\\xd7\\xd8\\xd9\\xda\\xe2\\xe3\\xe4\\xe5\\xe6\\xe7\\xe8\\xe9\\xea\\xf2\\xf3\\xf4\\xf5\\xf6\\xf7\\xf8\\xf9\\xfa\\xff\\xda\\x00\\x0c\\x03\\x01\\x00\\x02\\x11\\x03\\x11\\x00?\\x00\\xc5\\x93\\xc8dG\\x8aM\\xa1\\xb8ocZ\\xb6\\x9a\\x05\\xcd\\xd3,\\xbet(\\xa7\\x0c#^{w\\x02\\xb1\\xe6\\xb7\\x8ds$K\\xfb\\x927dt\\xcdA\\xa6\\xeasY\\xce&\\x8c\\xb3\"\\x90\\xd9\\xdd\\xd0zW\\x04\\xa19S~\\xcd\\xea*j7\\xf7\\xb6:\\x1b\\xbd\\x0e\\xf2\\xd9de\\x11L\\xaa2B\\x1c\\x90>\\x95\\xc7Ot\\xebw\\xb9\\x14\\x1226\\x91\\x9cWIu\\xae\\x17\\xba\\x13[\\xdd\\xban\\x191\\xc8\\tU\\xfag\\x8a\\x93O\\xb0\\xb6\\xd4&:\\x83\\xacx9W@\\x06\\xd2\\xfds\\x8f\\xa5eNS\\xa1O\\xdaV\\xfe\\xbc\\x8d=\\x94\\\\\\xad\\x03-\\'K\\xa2\\xb1\\x02\\xfe^F\\xc6e\\x1cc\\x1e\\xdd+O\\xfb6\\xeb\\xec\\x86x\\x8f\\x99\\x1b\\x0f\\xbc\\xa7\\x19\\x1fL\\xe6\\xb6V{(\\xd9\\xa1\\xbf\\xb5\\x80\"\\xfd\\xd7H\\xc7\\xf4\\xaen\\xf2\\xf6(\\xeeK\\xe9Q\\xdcF\\t\\xda\\xc7~\\x14\\x8fS\\x9f\\xe5E*\\xd3\\xac\\xff\\x00w\\x1d\\xbe\\xef\\xbc\\xa7F0~\\xf1j\\xd2A\\x07\\x9a\\xa8\\xa4\\xc6\\xb8<\\x0e\\xbf_J\\xa1}\\xe7F\\xe8a\\x1b\\xa3c\\xbc:\\xfa\\xf7\\x15\\xd8\\xd8%\\xae\\xb1\\xa3\\x0b\\xc2BK\\xd2Ic\\\\`\\x8fQ\\xdf\\xebX\\xda\\xde\\x9fs\\xa7\\xc1\\x19*\\x8e\\xaa\\xd9\\x0f\\x1e\\x14H:\\x8c\\xaf\\xaf\\xe7UO\\x15\\t\\xcf\\x95\\xab=\\xac\\xc8\\x9d&\\xb5F0\\x9aW\\x80\\x99\\xd4\\xedbr\\xed\\xd4\\x1e1\\x8a\\xac\\x0eFKd\\xff\\x00\\xbcE[\\xd5/R\\xe2\\xd6\\x17BC6r\\x87\\x8a\\xc8\\xf3\\x1c\\x80F\\xc1\\xc7\\xadw\\xc3Us$t\\x17\\x90\\x83c2\\xca\\xe7\\xb66`\\x8e\\x08\\x18\\xac\\xdb;\\x9f\\xb0\\xac\\xb1\\xa5\\xbcr\\xc6\\xeaP\\x87\\x19\\xc6O\\x1d\\xba\\x8fj\\xea5-\\x1e\\xddd\\xb71n]\\xeeA\\\\\\xfc\\xbd\\t\\xe9\\xf5\\x15\\x83\\xe7\\xc2\\xc8\\x96\\xe1\\x8b\\x9d\\xc5\\x86@\\x1bI\\xeb\\x8aT\\xa2\\x92\\xb9\\xa4\\x95\\x9d\\x8b\\x966->\\x934\\xd7\\x8d\\xe5\\xfe\\xf8F\\xa20\\x07\\x18,H\\xef\\xd0TV\\xfa,\\xda\\xa3\\t@6\\xb01;\\x90\\x93\\xd7\\xda\\xb4^GXa\\x8d\\xed\\xa4\\x8e\\x0f,\\xe5\\x94\\x82=\\x01\\xc8\\xe8kB\\xd1\\xd6+t\\x8dp\\xaa\\xa3\\x80=+\\x93\\x1b\\x89t\\xe9)R\\xb3\\xb9\\xad*w\\x95\\xa4T\\x9bC\\xb5\\x8e\\xd9m\\xbc\\xbb\\x87\\x07\\x03\\xcd\\xf3\\t\\xfc\\xe9\\xf6\\xfe\\x1d\\xd2\\xc4=\\x18\\xe7\\xee\\xbb9\\x07\\xfc+L\\xc9\\x94\\x07wS\\x8a\\xab{\\xa8C\\xa7\\xc3\\xe6L\\xdbGoS\\xf4\\xaf\\n8\\x9a\\xf2\\xf7c\\'s\\xb1\\xc2;\\xb4I\\xa5\\xdb\\r\\x0e9`\\xdb/\\xd9\\xe5b\\xf9#+\\xc8\\x00\\xff\\x00*H%2h\\xef\\x14\\xb1-\\xc7\\x94\\xed\\x1cD7!I\\xc7\\xe5\\x8ek-\\xce\\xb3\\xad@\\xabm!\\xb3\\xb3\\x95\\x1b|\\x84\\xe0\\xae\\x0e95\\x94\\x9a`\\xd3\\xd5\\x9a-Y.\\x82}\\xe4V9?\\xe3]1\\xa1\\'\\'\\xcf/{G\\xd7\\xf3[\\\\\\xc6R\\x8aZ-\\x08/\\xed\\xa2\\x8e\\x1c\\xee c\\xa8\\x1d+\\r\\xed\\xd89\\xc4\\xbc}+\\xa2\\x8a\\xe69\\x17`\\x1b\\x81\\xe0\\xf1\\xd3\\xebT\\xa5\\xd3!\\x92Fe\\xb8(\\x0f\\xf0\\x81\\xd2\\xbd\\xaaU9t\\x91\\xe7)\\x1d\\xa6\\xb9\\x1d\\xd3[$\\x96k\\xbd\\xe2}\\xe4c\\x9f\\xc2\\xb8[\\xa7\\x80;\\xb2\\x87Gbs\\x1b\\x8f\\xbak\\xd3\\x14\\xfc\\xbc\\xf4\\xa6\\xc9m\\x04\\xdc\\xcb\\x0cn\\x7f\\xdaPj\\xe3>Uc\\xaeP\\xbe\\xa7\\x9f\\xe9\\xda\\xb8\\x11,wY\\x05N\\x15\\xfa\\xfeb\\xb6c\\xb9\\x12(1\\xc8\\x1cz\\x83Zw~\\x19\\xd3\\xae\\xb2R#\\x0bz\\xc7\\xc0\\xfc\\xbaV\\x15\\xc7\\x84\\xef-\\xd8\\xb5\\x9c\\xeb&:`\\xedj\\xe5\\xab\\x85\\xa7Q\\xddhi\\x1a\\x92\\x8e\\xfa\\x97\\xd6\\xf2X\\x8f\\xcaw\\x0e\\xb85\\x8du\\xf6\\x8dsT>r\\x88V\\xdc\\x84Tc\\xc6z\\xe4\\xfbw\\xa6\\xb9\\xd5\\xacN.`vQ\\xdd\\x93\\xfa\\xd4\\x96\\xb7\\x1f\\xda3]\\x16M\\xb3\\x1d\\xb2\\x05\\x07\\xae\\xd1\\x8c~T\\xb0\\xb8WN\\xaf3Km\\xc2\\xadE(\\xd9\\x1d$^Tv\\x97\\xc5eY!\\x94\\x15R\\xbc\\x92H\\xf6\\xfa\\x1a\\xe6d\\xb6k)\\xcao\\xdf\\x1e\\xdc\\xaf\\xa8\\x03\\xa8>\\xb5\\xa7\\x01!\\x19\\xed\\xe5P\\x92\\x7f{\\x92zg?\\xe1U\\xef|\\xb6\\x87\\xccC\\x85\\x03b\\xe0\\x01\\xb8\\xe3\\x1d\\xb8\\xae\\xe8R\\x8c$\\xe5\\x1e\\xb6\\xfc\\x0ev\\xdbVfl\\xb2\\xf9S\\x98\\x97\\xcbD\\x0b\\xbb\\x1f\\xde\\x1d\\xe9\\x82i\\x1f\\xe6\\xc6s\\xdfi\\xad\\xabO\\x0f[jV\\xa9=\\xcbH\\xae\\xdc\\r\\xa7\\x1cT\\xeb\\xe1D\\x03\\x0by0\\x1d\\x81\\x15\\x13Q\\xbe\\x84{&\\xf5:l\\xf44\\x80\\xf3\\xc1\\xa2\\x8a\\x93\\xa8]\\xdd\\xa8\\xe3\\xb5\\x14Q`\\x1a[p#\\x19\\x04s\\\\\\xf5\\xf7\\x86\\xd6I\\xbe\\xd1a/\\xd9\\xe6\\x078\\xfe\\x1f\\xfe\\xb5\\x14SN\\xdb\\t\\xab\\xeegMg\\xa8\\xc2wM\\xa6\\xa4\\xaf\\xfd\\xf8\\xceA\\xf7#\\xff\\x00\\xadM\\xb1\\xd2\\xefo.c\\xfbM\\xb3Cl\\xa7$t\\xc0\\xf4\\x02\\x8a+Nwc>Es\\xac\\xc0\\x8d\\x02D\\x9f(\\x18\\x1e\\x82\\x948\\x1c\\x16 \\xfdh\\xa2\\xa0\\xd0\\xff\\xd9'"
+    },
+    "metadata_flags": [
+      {
+        "issue": "software_tag_present",
+        "detail": "GIMP 2.4.5"
+      },
+      {
+        "issue": "software_and_camera_present",
+        "detail": "make=Canon, software=GIMP 2.4.5"
+      },
+      {
+        "issue": "datetime_found",
+        "detail": "2004:08:27 13:52:55"
+      }
+    ],
+    "filesystem": {
+      "size": 9198,
+      "mtime": "2026-01-31T09:19:47.939079",
+      "ctime": "2026-01-31T09:19:47.938525",
+      "atime": "2026-01-31T09:19:48.502386"
+    },
+    "structure": [],
+    "ela_image": "./uploads\\Canon_DIGITAL_IXUS_400.ela.png",
+    "ela_stats": {
+      "mean": 7.906000137329102,
+      "std": 7.42739725112915,
+      "max": 61.0,
+      "min": 0.0
+    },
+    "entropy_image": "./uploads\\Canon_DIGITAL_IXUS_400.entropy.png",
+    "entropy_stats": {
+      "mean": 221.2752,
+      "std": 25.09514690718772,
+      "max": 255.0,
+      "min": 105.0
+    },
+    "copy_move": {
+      "status": "not_enough_matches",
+      "match_count": 0
+    },
+    "hf_model": {
+      "prediction_index": 2,
+      "confidence": 0.21691308915615082
+    }
+  },
+  "summary": {
+    "score_estimate_out_of_100": 45,
+    "reasons": [
+      "software tag present (GIMP 2.4.5)",
+      "camera + software present (make=Canon, software=GIMP 2.4.5)"
+    ]
+  }
+}

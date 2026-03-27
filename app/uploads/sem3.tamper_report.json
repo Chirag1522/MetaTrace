@@ -1,0 +1,53 @@
+{
+  "file": "./uploads\\sem3.jpg",
+  "scan_time": "2026-01-31T03:48:35.828810+00:00",
+  "checks": {
+    "file_magic": {
+      "magic_header": "ffd8ffe000104a46494600010100000100010000ffdb00840006060606070607",
+      "detected_type": "jpeg",
+      "filesize": 247839
+    },
+    "exif_piexif": {
+      "0th": {},
+      "Exif": {},
+      "GPS": {},
+      "Interop": {},
+      "1st": {}
+    },
+    "exif_exifread": {},
+    "metadata_flags": [],
+    "filesystem": {
+      "size": 247839,
+      "mtime": "2026-01-31T09:18:35.315952",
+      "ctime": "2026-01-31T09:18:35.315380",
+      "atime": "2026-01-31T09:18:35.830199"
+    },
+    "structure": [],
+    "ela_image": "./uploads\\sem3.ela.png",
+    "ela_stats": {
+      "mean": 5.325346946716309,
+      "std": 7.431555271148682,
+      "max": 93.0,
+      "min": 0.0
+    },
+    "entropy_image": "./uploads\\sem3.entropy.png",
+    "entropy_stats": {
+      "mean": 161.65274270833334,
+      "std": 51.09147870974556,
+      "max": 255.0,
+      "min": 0.0
+    },
+    "copy_move": {
+      "status": "not_enough_matches",
+      "match_count": 0
+    },
+    "hf_model": {
+      "prediction_index": 0,
+      "confidence": 0.32964569330215454
+    }
+  },
+  "summary": {
+    "score_estimate_out_of_100": 100,
+    "reasons": []
+  }
+}

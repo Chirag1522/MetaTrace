@@ -1,0 +1,54 @@
+{
+  "file": "./uploads\\db.jpeg",
+  "scan_time": "2026-03-27T23:06:43.441016+00:00",
+  "checks": {
+    "file_magic": {
+      "magic_header": "ffd8ffe000104a46494600010100000100010000ffe201d84943435f50524f46",
+      "detected_type": "jpeg",
+      "filesize": 150259
+    },
+    "exif_piexif": {
+      "0th": {},
+      "Exif": {},
+      "GPS": {},
+      "Interop": {},
+      "1st": {}
+    },
+    "exif_exifread": {},
+    "metadata_flags": [],
+    "filesystem": {
+      "size": 150259,
+      "mtime": "2026-03-28T04:36:41.921014",
+      "ctime": "2026-03-28T04:36:41.917877",
+      "atime": "2026-03-28T04:36:43.449227"
+    },
+    "structure": [],
+    "ela_image": "./uploads\\db.ela.png",
+    "ela_stats": {
+      "mean": 3.24753475189209,
+      "std": 8.127274513244629,
+      "max": 158.0,
+      "min": 0.0
+    },
+    "entropy_image": "./uploads\\db.entropy.png",
+    "entropy_stats": {
+      "mean": 69.43196770893232,
+      "std": 58.72035361292247,
+      "max": 255.0,
+      "min": 0.0
+    },
+    "copy_move": {
+      "skipped": "opencv not installed"
+    },
+    "hf_model": {
+      "error": "torch not installed"
+    }
+  },
+  "summary": {
+    "score_estimate_out_of_100": 95,
+    "reasons": [
+      "high ELA std: 8.13",
+      "model_error: torch not installed"
+    ]
+  }
+}
