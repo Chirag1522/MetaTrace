@@ -199,10 +199,28 @@ export default async function handler(req, res) {
         let blockchainResponse;
         
         if (walletConnected) {
-          // 🔴 User has wallet: Send from default account but attribute to user's wallet
-          console.log(`📱 Wallet connected: ${walletAddress}. Storing metadata with wallet attribution...`);
-          blockchainResponse = await storeOnBlockchain(fileData);
-          blockchainResponse.uploadedByWallet = walletAddress; // Attribution
+          // 🔴 User has wallet: Return transaction data for frontend to sign
+          // Frontend will use wallet signer to send the transaction
+          console.log(`📱 Wallet connected: ${walletAddress}. Returning transaction for wallet signing...`);
+          
+          const dataToStore = {
+            ...fileData.metadata,
+            ipfsCid: fileData.pinataCid || null,
+          };
+          const jsonString = JSON.stringify(dataToStore);
+          
+          // Return transaction payload for frontend to sign
+          blockchainResponse = {
+            requiresWalletSignature: true,
+            sender: walletAddress,
+            transactionData: {
+              contractAddress: CONTRACT_ADDRESS,
+              functionName: "storeMetadata",
+              params: [1, jsonString],
+              chain: "moonbase-alpha",
+            },
+            message: "Transaction needs to be signed by your connected wallet",
+          };
         } else {
           // 🟢 No wallet: Send from default backend account
           console.log(`⚙️ No wallet connected. Using default backend account (${account?.address})...`);
@@ -218,11 +236,11 @@ export default async function handler(req, res) {
           blockchain: {
             ...(blockchainResponse || {}),
             ...(txExplorerUrl ? { txExplorerUrl } : {}),
-            uploadedByWallet: blockchainResponse?.uploadedByWallet || (walletConnected ? walletAddress : "default_backend"),
+            uploadedByWallet: walletConnected ? walletAddress : "default_backend",
           },
           ...(txHash ? { txHash } : {}),
           ...(txExplorerUrl ? { txExplorerUrl } : {}),
-          uploadedByWallet: blockchainResponse?.uploadedByWallet || (walletConnected ? walletAddress : "default_backend"), // Top-level for MongoDB query
+          uploadedByWallet: walletConnected ? walletAddress : "default_backend",
         };
 
         await db.collection("uploads").insertOne(fileDataWithBlockchain);
@@ -234,9 +252,11 @@ export default async function handler(req, res) {
 
         return res.status(200).json({
           metadata: fileDataWithBlockchain,
-          blockchain: fileDataWithBlockchain.blockchain,
-          uploadedByWallet: blockchainResponse?.uploadedByWallet || (walletConnected ? walletAddress : "default_backend"),
+          blockchain: blockchainResponse,
+          uploadedByWallet: walletConnected ? walletAddress : "default_backend",
           walletConnected: walletConnected,
+          requiresWalletSignature: blockchainResponse?.requiresWalletSignature || false,
+          transactionData: blockchainResponse?.transactionData || null,
         });
       });
     } catch (error) {

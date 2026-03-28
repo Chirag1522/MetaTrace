@@ -9,9 +9,12 @@ import { useRouter } from 'next/router';
 import MetadataAndRecommendations from '@/components/MetadataRecommendations';
 import UploadLoader from '@/components/UploadLoader';
 import WalletConnectModal from '@/components/WalletConnectModal';
+import { useWalletClient } from 'wagmi';
+import { ethers } from 'ethers';
 
 const Upload = () => {
   const router = useRouter();
+  const { data: walletClient } = useWalletClient();
   const [file, setFile] = useState(null);
   const [fileEnter, setFileEnter] = useState(false);
   const [recentUploads, setRecentUploads] = useState([]);
@@ -84,6 +87,58 @@ const Upload = () => {
       setUserEmail(userData.email);
     } catch (error) {
       router.push('/login');
+    }
+  };
+
+  // 🔹 Send transaction from user's connected wallet
+  const sendTransactionFromWallet = async (transactionData) => {
+    if (!walletClient) {
+      throw new Error('Wallet not connected');
+    }
+
+    try {
+      console.log('📤 Sending transaction from user wallet...');
+      
+      const contractAbi = [
+        {
+          "inputs": [
+            { "internalType": "uint256", "name": "tokenId", "type": "uint256" },
+            { "internalType": "string", "name": "jsonData", "type": "string" }
+          ],
+          "name": "storeMetadata",
+          "outputs": [],
+          "stateMutability": "nonpayable",
+          "type": "function"
+        }
+      ];
+
+      // Use ethers provider with user's connected wallet
+      const userProvider = new ethers.providers.Web3Provider(window.ethereum);
+      const userSigner = await userProvider.getSigner();
+      
+      const contract = new ethers.Contract(
+        transactionData.contractAddress,
+        contractAbi,
+        userSigner
+      );
+
+      const params = transactionData.params || [1, '{}'];
+      const tx = await contract.storeMetadata(params[0], params[1]);
+      
+      console.log(`✅ Transaction sent! Hash: ${tx.hash}`);
+      
+      // Wait for transaction to be mined
+      const receipt = await tx.wait();
+      console.log(`✅ Transaction mined! Block: ${receipt.blockNumber}`);
+      
+      return {
+        txHash: tx.hash,
+        txExplorerUrl: `https://moonbase.moonscan.io/tx/${tx.hash}`,
+        blockNumber: receipt.blockNumber,
+      };
+    } catch (error) {
+      console.error('❌ Error sending transaction from wallet:', error);
+      throw error;
     }
   };
 
@@ -185,6 +240,25 @@ const Upload = () => {
         const data = await response.json();
   
         if (!response.ok) throw new Error(data.message || 'Upload failed');
+        
+        // Check if wallet signature is required
+        if (data.requiresWalletSignature && data.transactionData) {
+          console.log('🔐 Wallet signature required, prompting user...');
+          try {
+            const walletTxResult = await sendTransactionFromWallet(data.transactionData);
+            console.log('✅ Wallet transaction successful!', walletTxResult);
+            
+            // Update the blockchain data with the actual transaction result
+            if (data.blockchain) {
+              data.blockchain.txHash = walletTxResult.txHash;
+              data.blockchain.txExplorerUrl = walletTxResult.txExplorerUrl;
+            }
+          } catch (walletError) {
+            console.error('❌ Wallet transaction failed:', walletError);
+            alert(`Wallet transaction failed: ${walletError.message}`);
+          }
+        }
+        
         setSelectedFileMetadata({
           ...data.metadata,
           filename: uploadedFile.name,
