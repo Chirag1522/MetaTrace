@@ -102,6 +102,75 @@ def store_metadata_on_chain(metadata: dict) -> dict:
     """
     return {"skipped": "blockchain_disabled"}
 
+def upload_forensic_images_to_pinata(base_path: str) -> dict:
+    """Upload ELA and entropy images to Pinata IPFS."""
+    pinata_urls = {}
+    try:
+        import requests
+        
+        # Get Pinata credentials from environment
+        pinata_key = os.getenv("NEXT_PUBLIC_PINATA_API_KEY")
+        pinata_secret = os.getenv("NEXT_PUBLIC_PINATA_SECRET_API_KEY")
+        
+        if not pinata_key or not pinata_secret:
+            print("⚠️ Pinata credentials not found - skipping forensic image upload")
+            return pinata_urls
+        
+        # Upload ELA image
+        ela_path = base_path + '.ela.png'
+        if os.path.exists(ela_path):
+            try:
+                with open(ela_path, 'rb') as f:
+                    files = {'file': f}
+                    headers = {
+                        'pinata_api_key': pinata_key,
+                        'pinata_secret_api_key': pinata_secret
+                    }
+                    response = requests.post(
+                        'https://api.pinata.cloud/pinning/pinFileToIPFS',
+                        files=files,
+                        headers=headers,
+                        timeout=30
+                    )
+                    if response.status_code == 200:
+                        ipfs_hash = response.json().get('IpfsHash')
+                        pinata_urls['ela_ipfs_hash'] = ipfs_hash
+                        pinata_urls['ela_url'] = f"https://gateway.pinata.cloud/ipfs/{ipfs_hash}"
+                        print(f"✅ ELA image uploaded to Pinata: {ipfs_hash}")
+            except Exception as e:
+                print(f"⚠️ Failed to upload ELA image to Pinata: {str(e)}")
+        
+        # Upload entropy image
+        entropy_path = base_path + '.entropy.png'
+        if os.path.exists(entropy_path):
+            try:
+                with open(entropy_path, 'rb') as f:
+                    files = {'file': f}
+                    headers = {
+                        'pinata_api_key': pinata_key,
+                        'pinata_secret_api_key': pinata_secret
+                    }
+                    response = requests.post(
+                        'https://api.pinata.cloud/pinning/pinFileToIPFS',
+                        files=files,
+                        headers=headers,
+                        timeout=30
+                    )
+                    if response.status_code == 200:
+                        ipfs_hash = response.json().get('IpfsHash')
+                        pinata_urls['entropy_ipfs_hash'] = ipfs_hash
+                        pinata_urls['entropy_url'] = f"https://gateway.pinata.cloud/ipfs/{ipfs_hash}"
+                        print(f"✅ Entropy image uploaded to Pinata: {ipfs_hash}")
+            except Exception as e:
+                print(f"⚠️ Failed to upload entropy image to Pinata: {str(e)}")
+    
+    except ImportError:
+        print("⚠️ requests library not available")
+    except Exception as e:
+        print(f"⚠️ Error uploading forensic images: {str(e)}")
+    
+    return pinata_urls
+
 # ========== API Endpoints ==========
 @app.post("/upload/")
 async def upload_file(file: UploadFile = File(...), email: str = Form(...)):
@@ -239,6 +308,10 @@ async def upload_file(file: UploadFile = File(...), email: str = Form(...)):
 
         blockchain_response = store_metadata_on_chain(metadata)
 
+        # ✅ Upload forensic images (ELA, entropy) to Pinata IPFS
+        base = os.path.splitext(file_path)[0]
+        forensic_images = upload_forensic_images_to_pinata(base)
+
         # Build a rich response including tamper report and anomaly fields
         response_content = {
             "message": "File uploaded and metadata extracted",
@@ -247,7 +320,8 @@ async def upload_file(file: UploadFile = File(...), email: str = Form(...)):
             "anomaly_score": score_int,
             "anomaly_detected": anomaly_detected,
             "status": status_str, # Add status to top-level response
-            "tamper_report_path": report_path # Pass the path for /recommend
+            "tamper_report_path": report_path, # Pass the path for /recommend
+            "forensic_images": forensic_images  # ✅ Add Pinata URLs for ELA and entropy
         }
 
         # If blockchain storage provided info, include it; if error, attach the error
