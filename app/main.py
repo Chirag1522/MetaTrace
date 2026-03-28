@@ -429,6 +429,11 @@ async def recommend(metadata: dict): # Signature requires a JSON object
 
         metadata_str = json.dumps(gemini_input, indent=2)
 
+        # Extract filename for prompt context
+        report_filename = None
+        if isinstance(metadata, dict):
+            report_filename = metadata.get('originalFilename')
+
         # --- NEW PROMPT ---
         # This prompt is more explicit about the source of the JSON.
         if report_filename:
