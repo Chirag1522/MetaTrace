@@ -339,7 +339,7 @@ async def upload_file(file: UploadFile = File(...), email: str = Form(...)):
         print(f"❌ Upload Failed: {str(e)}")
         raise HTTPException(status_code=500, detail=f"Upload failed: {str(e)}")
 
-# ✅ Gemini-powered metadata analyzer
+# ✅ Groq-powered metadata analyzer
 @app.post("/recommend")
 async def recommend(metadata: dict): # Signature requires a JSON object
     """Analyze metadata for anomalies using Gemini AI."""
@@ -445,62 +445,67 @@ async def recommend(metadata: dict): # Signature requires a JSON object
             report_source_description = "You are analyzing the following JSON data, which includes a tamper report."
 
         prompt = f"""
-{score_hint}
-You are an AI expert in metadata forensics and anomaly detection.
-{report_source_description}
+You are a metadata forensics AI. Your job is to provide detailed analysis while respecting the automated forensic verdicts.
 
-Analyze the full contents of the JSON report provided below. Use the `anomaly_score`, `anomaly_detected`, and `status` fields as the primary basis for your final decision.
+**CRITICAL: The values below are from automated forensic analysis and are SOURCE OF TRUTH:**
+- If "anomaly_score" is < 90: anomaly_detected MUST be true (file has issues)
+- If "anomaly_score" is >= 90: anomaly_detected MUST be false (file is clean)
+- The "status" field (red/normal) determines risk_level (red=high, normal=low)
 
-Return **ONLY** a valid JSON output in the specified format. Do **NOT** include explanations outside the JSON.
-
-**Full Tamper Report Content (JSON):**
+**Full Forensic Report:**
 {metadata_str}
 
-**REQUIRED OUTPUT FORMAT (populate ALL fields with actual content):**
+**Your task:**
+1. EXTRACT these exact values from the report: anomaly_score, anomaly_detected, status
+2. USE those values as your PRIMARY output (DO NOT change them based on your analysis)
+3. Provide detailed explanations that ALIGN with these values
+4. If anomaly_detected=true, explain WHY the file has issues
+5. If anomaly_detected=false, explain WHY the file appears clean
+
+**REQUIRED JSON OUTPUT (follows the forensic verdict exactly):**
 {{
-    "anomaly_detected": true or false,
-    "risk_level": "low" or "medium" or "high",
-    "technical_analysis": "2-3 sentence technical explanation of the file's authenticity status based on metadata analysis",
-    "recommendations": ["Action 1 to take", "Action 2 to take", "Action 3 to take"],
-    "integrity_score": 0-100,
+    "anomaly_detected": <USE THE ACTUAL anomaly_detected VALUE FROM REPORT>,
+    "risk_level": "<high if status=red, low if status=normal>",
+    "technical_analysis": "2-3 sentences explaining the forensic findings and what the anomaly_score means",
+    "recommendations": ["Action for this file type", "Security best practice", "Next steps"],
+    "integrity_score": <USE THE ACTUAL anomaly_score VALUE FROM REPORT>,
     "detailed_breakdown": {{
-        "file_size": 0-100 (confidence score),
-        "file_metadata_discrepancy": 0-100 (confidence score),
-        "image_resolution": 0-100 (confidence score),
-        "image_hash": 0-100 (confidence score)
+        "file_size": 50,
+        "file_metadata_discrepancy": <score based on metadata issues found>,
+        "image_resolution": 50,
+        "image_hash": 50
     }},
     "metadata_summary": {{
         "brief_summary": {{
             "title": "File Properties Overview",
-            "content": ["Property 1: Value", "Property 2: Value", "Property 3: Value"]
+            "content": ["Extract and list 3 REAL properties from the JSON report"]
         }},
         "authenticity": {{
             "title": "Authenticity & Manipulation Analysis",
-            "content": ["Finding 1 about file authenticity", "Finding 2 about potential issues", "Finding 3 about confidence level"]
+            "content": ["Extract findings from the 'reasons' field", "Explain what anomaly_score {metadata_str.split('anomaly_score')[1].split(',')[0] if 'anomaly_score' in metadata_str else '?'} means", "State if file is tampered/authentic"]
         }},
         "metadata_table": {{
             "title": "Metadata Analysis Table",
             "headers": ["Field", "Value", "Status"],
             "rows": [
-                ["FieldName1", "value1", "Normal"],
-                ["FieldName2", "value2", "Anomalous"],
-                ["FieldName3", "value3", "Normal"]
+                ["Anomaly Score", "<from report>", "Indicates tampering likelihood"],
+                ["Detected Issues", "<yes/no>", "From anomaly_detected field"],
+                ["Status", "<red/normal>", "From status field"]
             ]
         }},
         "use_cases": {{
             "title": "Recommended Applications",
-            "content": ["Application 1 for this file type", "Application 2 for this file type"]
+            "content": ["Application suitable for this file type"]
         }}
     }}
 }}
 
-**CRITICAL INSTRUCTIONS:**
-1. Extract ACTUAL metadata fields from the JSON and populate metadata_table.rows
-2. List REAL file properties in brief_summary.content
-3. Provide SPECIFIC authenticity findings in authenticity.content
-4. Recommend ACTUAL applications suitable for this file type
-5. Do NOT return empty arrays - every "content" and "rows" field MUST have at least 2-3 items
-6. Keep content items concise (one sentence each)
+**ABSOLUTE RULES:**
+- NEVER change anomaly_detected based on your own analysis
+- ALWAYS use the forensic anomaly_score as integrity_score
+- If report says "anomaly_detected": true, your response MUST say anomaly_detected: true with high risk
+- If report says "anomaly_detected": false, your response MUST say anomaly_detected: false with low risk
+- Return ONLY valid JSON, no explanations outside the brackets
 """
         # --- END NEW PROMPT ---
 
@@ -640,30 +645,41 @@ Return **ONLY** a valid JSON output in the specified format. Do **NOT** include 
         try:
             result = json.loads(raw_response)
         except json.JSONDecodeError:
-            print("❌ Gemini returned invalid JSON!")
-            return JSONResponse(content={"error": "Invalid JSON from Gemini", "raw_output": raw_response}, status_code=500)
+            print("❌ Groq returned invalid JSON!")
+            return JSONResponse(content={"error": "Invalid JSON from Groq", "raw_output": raw_response}, status_code=500)
 
-        # Get actual anomaly values from tamper report
+        # Get actual anomaly values from tamper report - THESE ARE THE SOURCE OF TRUTH
         actual_anomaly_detected = False
         actual_integrity_score = 75
+        actual_risk_level = "low"
+        actual_status = "normal"
         try:
             if isinstance(gemini_input, dict):
                 tr = gemini_input.get('tamper_report') or gemini_input
                 if isinstance(tr, dict):
                     actual_anomaly_detected = tr.get('anomaly_detected', False)
                     actual_integrity_score = tr.get('anomaly_score') or tr.get('integrity_score', 75)
-        except Exception:
-            pass
+                    actual_status = tr.get('status', 'normal')
+                    
+                    # Calculate risk_level based on actual status or anomaly_detected
+                    if actual_status == 'red' or actual_anomaly_detected:
+                        actual_risk_level = 'high'
+                    else:
+                        actual_risk_level = 'low'
+                    
+                    print(f"✅ SOURCE OF TRUTH: anomaly_detected={actual_anomaly_detected}, risk_level={actual_risk_level}, score={actual_integrity_score}")
+        except Exception as e:
+            print(f"⚠️ Error extracting source of truth: {str(e)}")
 
-        # Add fallback defaults - but preserve ACTUAL anomaly detection from forensics
+        # Enforce actual forensic values in response - NEVER override with Groq's wrong values
         result = {
-            "anomaly_detected": actual_anomaly_detected,  # ✅ USE ACTUAL VALUE FROM FORENSICS
+            "anomaly_detected": actual_anomaly_detected,  # ✅ ENFORCED FROM FORENSICS
             "reason": result.get("reason") or result.get("technical_analysis", "File analysis complete."),
             "best_practices": result.get("best_practices", ["Ensure files are from trusted sources", "Keep security updated"]),
-            "risk_level": result.get("risk_level", "low"),
+            "risk_level": actual_risk_level,  # ✅ ENFORCED FROM STATUS/ANOMALY_DETECTED
             "technical_analysis": result.get("technical_analysis", "No detailed report available."),
             "recommendations": result.get("recommendations", []),
-            "integrity_score": int(actual_integrity_score),  # ✅ USE ACTUAL VALUE FROM FORENSICS
+            "integrity_score": int(actual_integrity_score),  # ✅ ENFORCED FROM FORENSICS
             "detailed_breakdown": result.get("detailed_breakdown", {
                 "file_size": 0,
                 "file_metadata_discrepancy": 0,
