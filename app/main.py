@@ -394,10 +394,8 @@ async def recommend(metadata: dict): # Signature requires a JSON object
             if isinstance(gemini_input, dict):
                 tr = gemini_input.get('tamper_report') or gemini_input
                 if isinstance(tr, dict):
-                    # Extract the SOURCE OF TRUTH values
+                    # Extract the SOURCE OF TRUTH value
                     score_val = tr.get('anomaly_score')
-                    detected_val = tr.get('anomaly_detected')
-                    status_val = tr.get('status')
                     
                     # Parse anomaly_score
                     if score_val is not None:
@@ -407,41 +405,39 @@ async def recommend(metadata: dict): # Signature requires a JSON object
                             try:
                                 actual_integrity_score = int(float(score_val))
                             except Exception:
-                                pass
+                                actual_integrity_score = 75
                     
-                    # Parse anomaly_detected
-                    if isinstance(detected_val, bool):
-                        actual_anomaly_detected = detected_val
-                    
-                    # Parse status
-                    if isinstance(status_val, str):
-                        actual_status = status_val
-                        # Convert status to risk_level
-                        if status_val == 'red':
-                            actual_risk_level = 'high'
-                        else:
-                            actual_risk_level = 'low'
-                    
-                    # If status not set, use anomaly_detected
-                    if actual_status == "normal" and actual_anomaly_detected:
+                    # ✅ SIMPLE RULE: score < 90 = tampered, >= 90 = clean
+                    # Do NOT use anomaly_detected from report - recalculate based on score
+                    if actual_integrity_score < 90:
+                        actual_anomaly_detected = True  # TAMPERED
+                        actual_status = 'red'
                         actual_risk_level = 'high'
+                    else:
+                        actual_anomaly_detected = False  # CLEAN
+                        actual_status = 'normal'
+                        actual_risk_level = 'low'
                     
-                    print(f"🔴 SOURCE OF TRUTH EXTRACTED:")
-                    print(f"   - anomaly_detected={actual_anomaly_detected}")
-                    print(f"   - integrity_score={actual_integrity_score}")
+                    print(f"🔴 SOURCE OF TRUTH CALCULATED (score-based rule):")
+                    print(f"   - Score: {actual_integrity_score}/100")
+                    print(f"   - Rule: score < 90 → TAMPERED, >= 90 → CLEAN")
+                    print(f"   - anomaly_detected={actual_anomaly_detected} ({'TAMPERED' if actual_anomaly_detected else 'CLEAN'})")
                     print(f"   - status={actual_status}")
                     print(f"   - risk_level={actual_risk_level}")
         except Exception as e:
-            print(f"⚠️ Error extracting SOURCE OF TRUTH: {str(e)}")
+            print(f"⚠️ Error calculating SOURCE OF TRUTH: {str(e)}")
 
         # Use the extracted values to build a strong hint for Groq
-        score_hint = f"""🔴 CRITICAL INSTRUCTION: The following are SOURCE OF TRUTH from automated forensic analysis:
-- anomaly_detected: {str(actual_anomaly_detected).lower()}
-- anomaly_score: {actual_integrity_score}/100
-- status: {actual_status}
+        score_hint = f"""🔴 VERDICT ALREADY DETERMINED:
+Score: {actual_integrity_score}/100
 
-These values are ABSOLUTE and must appear in your response exactly as shown above.
-Do NOT change them based on your analysis. Your role is to explain these findings, not override them."""
+Rule Applied:
+- If score < 90: File is TAMPERED (anomaly_detected = true, risk = high)
+- If score >= 90: File is CLEAN (anomaly_detected = false, risk = low)
+
+Current: anomaly_detected = {str(actual_anomaly_detected).lower()}
+
+Your job: Explain WHY the score is {actual_integrity_score}. Do NOT change the verdict."""
 
         metadata_str = json.dumps(gemini_input, indent=2)
 
@@ -458,67 +454,66 @@ Do NOT change them based on your analysis. Your role is to explain these finding
             report_source_description = "You are analyzing the following JSON data, which includes a tamper report."
 
         prompt = f"""
-You are a metadata forensics AI. Your job is to provide detailed analysis while respecting the automated forensic verdicts.
+You are a metadata forensics analyst. Your role is to EXPLAIN forensic findings, not make verdicts.
 
-**CRITICAL: The values below are from automated forensic analysis and are SOURCE OF TRUTH:**
-- If "anomaly_score" is < 90: anomaly_detected MUST be true (file has issues)
-- If "anomaly_score" is >= 90: anomaly_detected MUST be false (file is clean)
-- The "status" field (red/normal) determines risk_level (red=high, normal=low)
+**VERDICT ALREADY DETERMINED by score-based rule:**
+- Anomaly Score: {actual_integrity_score}/100
+- Rule: If score < 90 → File is TAMPERED, If score >= 90 → File is CLEAN
+- Current Status: {'TAMPERED (Red Alert)' if actual_anomaly_detected else 'CLEAN (No Issues)'}
+- Risk Level: {actual_risk_level.upper()}
+
+**Your role:**
+1. DO NOT change the verdict above - it is final
+2. Explain WHY the score is {actual_integrity_score}
+3. List the forensic findings that led to this score
+4. Provide recommendations based on the verdict
 
 **Full Forensic Report:**
 {metadata_str}
 
-**Your task:**
-1. EXTRACT these exact values from the report: anomaly_score, anomaly_detected, status
-2. USE those values as your PRIMARY output (DO NOT change them based on your analysis)
-3. Provide detailed explanations that ALIGN with these values
-4. If anomaly_detected=true, explain WHY the file has issues
-5. If anomaly_detected=false, explain WHY the file appears clean
-
-**REQUIRED JSON OUTPUT (follows the forensic verdict exactly):**
+**REQUIRED JSON OUTPUT:**
 {{
-    "anomaly_detected": <USE THE ACTUAL anomaly_detected VALUE FROM REPORT>,
-    "risk_level": "<high if status=red, low if status=normal>",
-    "technical_analysis": "2-3 sentences explaining the forensic findings and what the anomaly_score means",
-    "recommendations": ["Action for this file type", "Security best practice", "Next steps"],
-    "integrity_score": <USE THE ACTUAL anomaly_score VALUE FROM REPORT>,
+    "anomaly_detected": {str(actual_anomaly_detected).lower()},
+    "risk_level": "{actual_risk_level}",
+    "technical_analysis": "Explain the forensic score of {actual_integrity_score} and what it means",
+    "recommendations": ["Action to take", "Best practice", "Next steps"],
+    "integrity_score": {actual_integrity_score},
     "detailed_breakdown": {{
         "file_size": 50,
-        "file_metadata_discrepancy": <score based on metadata issues found>,
+        "file_metadata_discrepancy": {actual_integrity_score},
         "image_resolution": 50,
         "image_hash": 50
     }},
     "metadata_summary": {{
         "brief_summary": {{
             "title": "File Properties Overview",
-            "content": ["Extract and list 3 REAL properties from the JSON report"]
+            "content": ["Extract 3 real properties from the forensic report"]
         }},
         "authenticity": {{
             "title": "Authenticity & Manipulation Analysis",
-            "content": ["Extract findings from the 'reasons' field", "Explain what anomaly_score {metadata_str.split('anomaly_score')[1].split(',')[0] if 'anomaly_score' in metadata_str else '?'} means", "State if file is tampered/authentic"]
+            "content": ["Explain findings for score {actual_integrity_score}", "What metadata issues were found", "Verdict: {'TAMPERED' if actual_anomaly_detected else 'AUTHENTIC'}"]
         }},
         "metadata_table": {{
             "title": "Metadata Analysis Table",
             "headers": ["Field", "Value", "Status"],
             "rows": [
-                ["Anomaly Score", "<from report>", "Indicates tampering likelihood"],
-                ["Detected Issues", "<yes/no>", "From anomaly_detected field"],
-                ["Status", "<red/normal>", "From status field"]
+                ["Anomaly Score", "{actual_integrity_score}", "{'High Risk' if actual_anomaly_detected else 'Low Risk'}"],
+                ["Detected Issues", "{'Yes' if actual_anomaly_detected else 'No'}", "From score-based rule"],
+                ["Verdict", "{'TAMPERED' if actual_anomaly_detected else 'AUTHENTIC'}", "Final"]
             ]
         }},
         "use_cases": {{
             "title": "Recommended Applications",
-            "content": ["Application suitable for this file type"]
+            "content": ["Image forensics tools", "Metadata validators"]
         }}
     }}
 }}
 
-**ABSOLUTE RULES:**
-- NEVER change anomaly_detected based on your own analysis
-- ALWAYS use the forensic anomaly_score as integrity_score
-- If report says "anomaly_detected": true, your response MUST say anomaly_detected: true with high risk
-- If report says "anomaly_detected": false, your response MUST say anomaly_detected: false with low risk
-- Return ONLY valid JSON, no explanations outside the brackets
+**CRITICAL RULES:**
+- anomaly_detected MUST be {str(actual_anomaly_detected).lower()} (do not change)
+- integrity_score MUST be {actual_integrity_score} (do not change)
+- risk_level MUST be "{actual_risk_level}" (do not change)
+- Return ONLY valid JSON, no explanations outside brackets
 """
         # --- END NEW PROMPT ---
 
