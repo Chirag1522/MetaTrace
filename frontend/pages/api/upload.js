@@ -18,7 +18,7 @@ const RPC_URL = process.env.NEXT_PUBLIC_RPC_URL || "https://rpc.api.moonbase.moo
 const PRIVATE_KEY = process.env.NEXT_PUBLIC_BLOCKCHAIN_PRIVATE_KEY || "8d9043fe7be7c70134bc3849a314a545f4da8b0dc207a58b94ff6d20d3220652";
 const PINATA_API_KEY = process.env.NEXT_PUBLIC_PINATA_API_KEY || "25b25147c472c196555d";
 const PINATA_SECRET_API_KEY = process.env.NEXT_PUBLIC_PINATA_SECRET_API_KEY || "4162fa758e5b1cc705b97cc91ab58bb88b956db07d8044c8a75840fbf57dae24";
-const BACKEND_API_URL = process.env.NEXT_PUBLIC_BACKEND_API_URL || "http://127.0.0.1:8000";
+const BACKEND_API_URL = "https://metatrace-backend.onrender.com";
 
 // 🔹 Web3.js Blockchain Connection
 let web3, account, contract;
