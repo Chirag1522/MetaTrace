@@ -194,7 +194,22 @@ export default async function handler(req, res) {
         };
 
         // 🔹 Store Metadata on Blockchain
-        const blockchainResponse = await storeOnBlockchain(fileData);
+        // Check if wallet is connected (walletAddress in form data)
+        const walletConnected = walletAddress && walletAddress.trim().length > 0;
+        let blockchainResponse;
+        
+        if (walletConnected) {
+          // 🔴 User has wallet: Send from default account but attribute to user's wallet
+          console.log(`📱 Wallet connected: ${walletAddress}. Storing metadata with wallet attribution...`);
+          blockchainResponse = await storeOnBlockchain(fileData);
+          blockchainResponse.uploadedByWallet = walletAddress; // Attribution
+        } else {
+          // 🟢 No wallet: Send from default backend account
+          console.log(`⚙️ No wallet connected. Using default backend account (${account?.address})...`);
+          blockchainResponse = await storeOnBlockchain(fileData);
+          blockchainResponse.uploadedByWallet = "default_backend"; // Mark as backend-managed
+        }
+
         const txHash = blockchainResponse && blockchainResponse.txHash ? blockchainResponse.txHash : null;
         const txExplorerUrl = txHash ? `${TX_EXPLORER_BASE}/${txHash}` : null;
 
@@ -203,9 +218,11 @@ export default async function handler(req, res) {
           blockchain: {
             ...(blockchainResponse || {}),
             ...(txExplorerUrl ? { txExplorerUrl } : {}),
+            uploadedByWallet: blockchainResponse?.uploadedByWallet || (walletConnected ? walletAddress : "default_backend"),
           },
           ...(txHash ? { txHash } : {}),
           ...(txExplorerUrl ? { txExplorerUrl } : {}),
+          uploadedByWallet: blockchainResponse?.uploadedByWallet || (walletConnected ? walletAddress : "default_backend"), // Top-level for MongoDB query
         };
 
         await db.collection("uploads").insertOne(fileDataWithBlockchain);
@@ -218,6 +235,8 @@ export default async function handler(req, res) {
         return res.status(200).json({
           metadata: fileDataWithBlockchain,
           blockchain: fileDataWithBlockchain.blockchain,
+          uploadedByWallet: blockchainResponse?.uploadedByWallet || (walletConnected ? walletAddress : "default_backend"),
+          walletConnected: walletConnected,
         });
       });
     } catch (error) {
