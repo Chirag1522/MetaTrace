@@ -41,11 +41,27 @@ export default async function handler(req, res) {
       { expiresIn: "1h" }
     );
 
-    // ✅ Build reset link
-    const resetLink = `${process.env.NEXT_PUBLIC_APP_URL}/reset-password?token=${resetToken}`;
+    // ✅ Build reset link with fallback logic
+    let appUrl = process.env.NEXT_PUBLIC_APP_URL;
+    
+    // Fallback logic for resetting development/production environments
+    if (!appUrl) {
+      // Try to infer from request headers
+      const protocol = process.env.NODE_ENV === 'production' ? 'https' : 'http';
+      const host = req.headers.host || 'localhost:3000';
+      appUrl = `${protocol}://${host}`;
+      console.warn(`⚠️ NEXT_PUBLIC_APP_URL not set. Using fallback: ${appUrl}`);
+    }
+    
+    const resetLink = `${appUrl}/reset-password?token=${resetToken}`;
+    console.log(`📧 Building reset link: ${appUrl}/reset-password?token=...`);
 
     // ✅ Send reset email
     const emailSent = await sendPasswordResetEmail(email, resetLink);
+    
+    if (!emailSent) {
+      console.warn(`⚠️ Email sending failed, but reset link was generated correctly: ${resetLink}`);
+    }
 
     if (!emailSent) {
       console.warn(`⚠️ Failed to send reset email to ${email}, but token was generated`);

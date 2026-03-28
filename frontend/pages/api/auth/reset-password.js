@@ -33,10 +33,17 @@ export default async function handler(req, res) {
     let decoded;
     try {
       decoded = jwt.verify(token, process.env.JWT_SECRET);
+      console.log(`✅ Token verified for user: ${decoded.email}`);
     } catch (error) {
       if (error.name === 'TokenExpiredError') {
+        console.warn(`⚠️ Token expired for user: ${error.message}`);
         return res.status(401).json({ message: "Reset link has expired. Please request a new one." });
       }
+      if (error.name === 'JsonWebTokenError') {
+        console.warn(`⚠️ Invalid token: ${error.message}`);
+        return res.status(401).json({ message: "Invalid reset link." });
+      }
+      console.error(`❌ Token verification error: ${error.message}`);
       return res.status(401).json({ message: "Invalid reset link." });
     }
 

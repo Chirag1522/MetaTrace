@@ -22,8 +22,15 @@ const ResetPassword = () => {
 
   useEffect(() => {
     // Validate token exists
-    if (!token) {
+    if (token === undefined) {
+      // Still loading router query
+      return;
+    }
+    
+    if (!token || token.trim().length === 0) {
       setTokenValid(false);
+    } else {
+      setTokenValid(true);
     }
   }, [token]);
 
@@ -80,7 +87,7 @@ const ResetPassword = () => {
     }
   };
 
-  if (!tokenValid && token === undefined) {
+  if (!tokenValid) {
     return (
       <>
         <Head>
