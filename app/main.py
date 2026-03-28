@@ -370,38 +370,62 @@ async def recommend(metadata: dict): # Signature requires a JSON object
 
         prompt = f"""
 {score_hint}
-        You are an AI expert in metadata forensics and anomaly detection.
-        {report_source_description}
-        
-        Analyze the full contents of the JSON report provided below. Use the `anomaly_score`, `anomaly_detected`, and `status` fields as the primary basis for your final decision, especially for `integrity_score` and `anomaly_detected`. **DO NOT USE UR OWN BRAIN DO ACCORDING TO THESE FIELDS ONLY**.
+You are an AI expert in metadata forensics and anomaly detection.
+{report_source_description}
 
-        Return **ONLY** a valid JSON output in the specified format.
-        Do **NOT** include explanations or comments. If the upload date is today, don't mark it as suspicious.
+Analyze the full contents of the JSON report provided below. Use the `anomaly_score`, `anomaly_detected`, and `status` fields as the primary basis for your final decision.
 
-        **Full Tamper Report Content (JSON):**
-        {metadata_str}
+Return **ONLY** a valid JSON output in the specified format. Do **NOT** include explanations outside the JSON.
 
-        **Format:**
-        {{
-            "anomaly_detected": true/false,
-            "risk_level": "low/medium/high",
-            "technical_analysis": "Detailed technical report explaining *why* the file is anomalous or normal, based on the report data.",
-            "recommendations": ["List of specific actions to take based on the analysis"],
-            "integrity_score": 0-100,
-            "detailed_breakdown": {{
-                "file_size": int,
-                "file_metadata_discrepancy": int,
-                "image_resolution": int,
-                "image_hash": int
-            }},
-            "metadata_summary": {{
-                "brief_summary": {{"title": "File Properties Overview", "content": []}},
-                "authenticity": {{"title": "Authenticity & Manipulation Analysis", "content": []}},
-                "metadata_table": {{"title": "Metadata Analysis Table","headers": ["Field", "Value", "Status"],"rows": []}},
-                "use_cases": {{"title": "Recommended Applications", "content": []}}
-            }}
+**Full Tamper Report Content (JSON):**
+{metadata_str}
+
+**REQUIRED OUTPUT FORMAT (populate ALL fields with actual content):**
+{{
+    "anomaly_detected": true or false,
+    "risk_level": "low" or "medium" or "high",
+    "technical_analysis": "2-3 sentence technical explanation of the file's authenticity status based on metadata analysis",
+    "recommendations": ["Action 1 to take", "Action 2 to take", "Action 3 to take"],
+    "integrity_score": 0-100,
+    "detailed_breakdown": {{
+        "file_size": 0-100 (confidence score),
+        "file_metadata_discrepancy": 0-100 (confidence score),
+        "image_resolution": 0-100 (confidence score),
+        "image_hash": 0-100 (confidence score)
+    }},
+    "metadata_summary": {{
+        "brief_summary": {{
+            "title": "File Properties Overview",
+            "content": ["Property 1: Value", "Property 2: Value", "Property 3: Value"]
+        }},
+        "authenticity": {{
+            "title": "Authenticity & Manipulation Analysis",
+            "content": ["Finding 1 about file authenticity", "Finding 2 about potential issues", "Finding 3 about confidence level"]
+        }},
+        "metadata_table": {{
+            "title": "Metadata Analysis Table",
+            "headers": ["Field", "Value", "Status"],
+            "rows": [
+                ["FieldName1", "value1", "Normal"],
+                ["FieldName2", "value2", "Anomalous"],
+                ["FieldName3", "value3", "Normal"]
+            ]
+        }},
+        "use_cases": {{
+            "title": "Recommended Applications",
+            "content": ["Application 1 for this file type", "Application 2 for this file type"]
         }}
-        """
+    }}
+}}
+
+**CRITICAL INSTRUCTIONS:**
+1. Extract ACTUAL metadata fields from the JSON and populate metadata_table.rows
+2. List REAL file properties in brief_summary.content
+3. Provide SPECIFIC authenticity findings in authenticity.content
+4. Recommend ACTUAL applications suitable for this file type
+5. Do NOT return empty arrays - every "content" and "rows" field MUST have at least 2-3 items
+6. Keep content items concise (one sentence each)
+"""
         # --- END NEW PROMPT ---
 
         print("🔹 Sending request to Gemini...")
