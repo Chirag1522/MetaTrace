@@ -268,6 +268,47 @@ const MetadataAndRecommendations = ({ metadata, blockchainData, onBackToUpload }
           </div>
         </div>
 
+        {/* Forensic Images Section */}
+        {metadata?.forensic_images && (metadata.forensic_images.ela_url || metadata.forensic_images.entropy_url) && (
+          <div className="bg-[#f7f7f7ff] dark:bg-[#333] p-4 rounded-lg transition-colors duration-300 mt-6">
+            <div className="flex items-center mb-4 gap-2">
+              <FileText className="w-5 h-5 text-[#ef4d31ff]" />
+              <h4 className="text-base sm:text-lg font-bold epilogue text-[#1a1a1a] dark:text-[#f7f7f7]">Forensic Visualizations</h4>
+            </div>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              {/* ELA Image */}
+              {metadata.forensic_images.ela_url && (
+                <div className="bg-white dark:bg-[#2a2a2a] p-4 rounded-lg transition-colors duration-300">
+                  <h5 className="font-semibold text-[#ef4d31ff] mb-3 text-sm">Error Level Analysis (ELA)</h5>
+                  <img 
+                    src={metadata.forensic_images.ela_url} 
+                    alt="ELA" 
+                    className="w-full h-auto rounded-lg border border-gray-200 dark:border-[#3a3a3a]"
+                  />
+                  <p className="text-xs text-gray-600 dark:text-[#999] mt-2 poppins">
+                    Shows re-compression artifacts. Bright areas indicate compression/editing.
+                  </p>
+                </div>
+              )}
+              
+              {/* Entropy Image */}
+              {metadata.forensic_images.entropy_url && (
+                <div className="bg-white dark:bg-[#2a2a2a] p-4 rounded-lg transition-colors duration-300">
+                  <h5 className="font-semibold text-[#ef4d31ff] mb-3 text-sm">Entropy Map</h5>
+                  <img 
+                    src={metadata.forensic_images.entropy_url} 
+                    alt="Entropy" 
+                    className="w-full h-auto rounded-lg border border-gray-200 dark:border-[#3a3a3a]"
+                  />
+                  <p className="text-xs text-gray-600 dark:text-[#999] mt-2 poppins">
+                    Visualizes information density. Dark areas have low entropy.
+                  </p>
+                </div>
+              )}
+            </div>
+          </div>
+        )}
+
         {/* View Transaction Link */}
         {!loading && blockchainData?.txHash && (
           <div className="mt-4 pt-4 border-t border-gray-200 dark:border-[#3a3a3a] flex flex-col sm:flex-row sm:justify-end sm:items-center gap-2">
