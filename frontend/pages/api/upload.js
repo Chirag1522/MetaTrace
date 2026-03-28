@@ -5,7 +5,6 @@ import fetch from "node-fetch";
 import FormData from "form-data";
 import Web3 from "web3";
 import axios from "axios";
-import { metadata } from "../_app";
 
 export const config = { api: { bodyParser: false } };
 
@@ -18,6 +17,7 @@ const PRIVATE_KEY = process.env.NEXT_PUBLIC_BLOCKCHAIN_PRIVATE_KEY || "8d9043fe7
 const PINATA_API_KEY = process.env.NEXT_PUBLIC_PINATA_API_KEY || "25b25147c472c196555d";
 const PINATA_SECRET_API_KEY = process.env.NEXT_PUBLIC_PINATA_SECRET_API_KEY || "4162fa758e5b1cc705b97cc91ab58bb88b956db07d8044c8a75840fbf57dae24";
 const BACKEND_API_URL = "https://metatrace-backend.onrender.com";
+const TX_EXPLORER_BASE = "https://moonbase.moonscan.io/tx";
 
 // 🔹 Web3.js Blockchain Connection
 let web3, account, contract;
@@ -192,20 +192,32 @@ export default async function handler(req, res) {
           // optional connected wallet address from client (kept at top-level too)
           ...(walletAddress ? { walletAddress } : {}),
         };
-        
-        await db.collection("uploads").insertOne(fileData);
+
+        // 🔹 Store Metadata on Blockchain
+        const blockchainResponse = await storeOnBlockchain(fileData);
+        const txHash = blockchainResponse && blockchainResponse.txHash ? blockchainResponse.txHash : null;
+        const txExplorerUrl = txHash ? `${TX_EXPLORER_BASE}/${txHash}` : null;
+
+        const fileDataWithBlockchain = {
+          ...fileData,
+          blockchain: {
+            ...(blockchainResponse || {}),
+            ...(txExplorerUrl ? { txExplorerUrl } : {}),
+          },
+          ...(txHash ? { txHash } : {}),
+          ...(txExplorerUrl ? { txExplorerUrl } : {}),
+        };
+
+        await db.collection("uploads").insertOne(fileDataWithBlockchain);
         console.log("✅ File metadata stored in MongoDB!");
         await client.close();
 
         fs.unlinkSync(file.filepath); // Cleanup temp file
         console.log("🧹 Temporary file deleted.");
 
-        // 🔹 Store Metadata on Blockchain
-        const blockchainResponse = await storeOnBlockchain(fileData);
-
         return res.status(200).json({
-          metadata: fileData,
-          blockchain: blockchainResponse,
+          metadata: fileDataWithBlockchain,
+          blockchain: fileDataWithBlockchain.blockchain,
         });
       });
     } catch (error) {

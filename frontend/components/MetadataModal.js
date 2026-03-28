@@ -1,7 +1,32 @@
 import { X, Copy, Trash2, Download } from 'lucide-react';
 
+const EXPLORER_TX_BASE = 'https://moonbase.moonscan.io/tx';
+
+const pickTxHash = (fileMetadata) => {
+  if (!fileMetadata) return null;
+  const candidates = [
+    fileMetadata.txHash,
+    fileMetadata.transactionHash,
+    fileMetadata?.blockchain?.txHash,
+    fileMetadata?.blockchain?.transactionHash,
+    fileMetadata?.metadata?.txHash,
+    fileMetadata?.metadata?.transactionHash,
+    fileMetadata?.metadata?.blockchain?.txHash,
+    fileMetadata?.metadata?.blockchain?.transactionHash,
+  ];
+  for (const value of candidates) {
+    if (typeof value === 'string' && value.trim()) {
+      return value.trim();
+    }
+  }
+  return null;
+};
+
 const MetadataModal = ({ isOpen, fileMetadata, onClose, onDelete }) => {
   if (!isOpen) return null;
+
+  const txHash = pickTxHash(fileMetadata);
+  const txExplorerUrl = txHash ? `${EXPLORER_TX_BASE}/${txHash}` : null;
 
   const handleDownload = (fileMetadata) => {
     const dataStr = JSON.stringify(fileMetadata, null, 2);
@@ -56,6 +81,23 @@ const MetadataModal = ({ isOpen, fileMetadata, onClose, onDelete }) => {
               <>Wallet: <span className="font-mono text-xs sm:text-sm">{fileMetadata.walletAddress.slice(0,6)}...{fileMetadata.walletAddress.slice(-4)}</span></>
             ) : (
               <span className="text-gray-400 dark:text-[#666]">No wallet connected</span>
+            )}
+            {txExplorerUrl && (
+              <div className="mt-1">
+                <a
+                  href={txExplorerUrl}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-[#ef4d31ff] hover:underline"
+                >
+                  View transaction on blockchain explorer →
+                </a>
+              </div>
+            )}
+            {!txExplorerUrl && (
+              <div className="mt-1 text-gray-500 dark:text-[#777]">
+                Transaction link unavailable for this record.
+              </div>
             )}
           </div>
           <div>

@@ -2,10 +2,31 @@ import { Upload, FolderSearch, List, BrainCog, Smile, Frown, FileText } from "lu
 import { useState, useEffect } from 'react';
 import AILoader from "./AILoader";
 
+const EXPLORER_TX_BASE = 'https://moonbase.moonscan.io/tx';
+
+const pickTxHash = (...values) => {
+  for (const value of values) {
+    if (typeof value === 'string' && value.trim()) {
+      return value.trim();
+    }
+  }
+  return null;
+};
+
 const MetadataAndRecommendations = ({ metadata, blockchainData, onBackToUpload }) => {
   console.log("yeh hai meta data kaa object ",metadata)
   const [aiResponse, setAiResponse] = useState(null);
   const [loading, setLoading] = useState(false);
+
+  const txHash = pickTxHash(
+    blockchainData?.txHash,
+    blockchainData?.transactionHash,
+    metadata?.blockchain?.txHash,
+    metadata?.blockchain?.transactionHash,
+    metadata?.txHash,
+    metadata?.transactionHash
+  );
+  const txExplorerUrl = txHash ? `${EXPLORER_TX_BASE}/${txHash}` : null;
 
   useEffect(() => {
     if (metadata) {
@@ -310,16 +331,22 @@ const MetadataAndRecommendations = ({ metadata, blockchainData, onBackToUpload }
         )}
 
         {/* View Transaction Link */}
-        {!loading && blockchainData?.txHash && (
+        {!loading && txExplorerUrl && (
           <div className="mt-4 pt-4 border-t border-gray-200 dark:border-[#3a3a3a] flex flex-col sm:flex-row sm:justify-end sm:items-center gap-2">
             <a
-              href={`https://moonbase.moonscan.io/tx/${blockchainData.txHash}`}
+              href={txExplorerUrl}
               target="_blank"
               rel="noopener noreferrer"
               className="text-xs sm:text-sm text-[#ef4d31ff] hover:underline hover:text-[#D22B2B] dark:hover:text-[#ff6b35] transition-colors poppins text-center sm:text-right"
             >
-              View transaction on block explorer →
+              View transaction on blockchain explorer →
             </a>
+          </div>
+        )}
+
+        {!loading && !txExplorerUrl && blockchainData && (
+          <div className="mt-4 pt-4 border-t border-gray-200 dark:border-[#3a3a3a] text-xs sm:text-sm text-gray-600 dark:text-[#aaa] poppins">
+            Blockchain transaction link unavailable for this upload.
           </div>
         )}
       </div>
