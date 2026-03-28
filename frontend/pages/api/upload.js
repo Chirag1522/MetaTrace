@@ -51,8 +51,8 @@ try {
 
 // 🔹 Cloudinary Configuration
 cloudinary.config({
-  cloud_name: process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME || "chirag84",
-  api_key: process.env.CLOUDINARY_API_KEY || "479271181843866",
+  cloud_name: process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME,
+  api_key: process.env.CLOUDINARY_API_KEY,
   api_secret: process.env.CLOUDINARY_API_SECRET,  // ⚠️ MUST be in env vars, never hardcode!
 });
 
