@@ -17,7 +17,7 @@ const MetadataAndRecommendations = ({ metadata, blockchainData, onBackToUpload }
     setLoading(true);
     try {
       console.log('📤 Sending metadata to backend:', metadata);
-      const backendUrl = process.env.NEXT_PUBLIC_BACKEND_API_URL || 'http://127.0.0.1:8000';
+      const backendUrl = 'https://metatrace-backend.onrender.com';
       const response = await fetch(`${backendUrl}/recommend`, {
         method: 'POST',
         headers: {
