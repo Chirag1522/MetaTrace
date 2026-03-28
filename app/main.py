@@ -270,46 +270,40 @@ async def recommend(metadata: dict): # Signature requires a JSON object
         if not metadata:
             return JSONResponse(content={"error": "No metadata provided"}, status_code=400)
 
-        # --- MODIFIED LOGIC ---
-        report_path_candidate = None
-        report_filename = None # Variable to store the filename
-        try:
-            # Check for the path key inside the provided dict
-            report_path_candidate = metadata.get('tamper_report_path') or metadata.get('report_path')
-            if isinstance(report_path_candidate, str):
-                report_path_candidate = os.path.normpath(report_path_candidate)
-                report_filename = os.path.basename(report_path_candidate) # Extract filename
-            else:
-                report_path_candidate = None # Ensure it's None if not a string
-        except Exception:
-            report_path_candidate = None
-        # --- END MODIFIED LOGIC ---
-
-
-        # If a report path is provided and the file exists, load its JSON and use that as metadata
+        # --- CRITICAL FIX: Use nested tamper_report from metadata first ---
         loaded_report = None
-        if report_path_candidate:
+        
+        # PRIORITY 1: Check if tamper_report is already nested in metadata (from upload endpoint)
+        if isinstance(metadata, dict) and 'tamper_report' in metadata:
+            loaded_report = metadata.get('tamper_report')
+            print(f"✅ Using nested tamper_report from metadata")
+        
+        # PRIORITY 2: Try to load from file path (fallback)
+        if loaded_report is None:
+            report_path_candidate = None
             try:
-                # Ensure the path is within the UPLOAD_DIR to prevent directory traversal
-                if not os.path.normpath(report_path_candidate).startswith(os.path.normpath(UPLOAD_DIR)):
-                     return JSONResponse(content={"error": "Access denied to report file"}, status_code=403)
-                
-                if os.path.exists(report_path_candidate):
-                    with open(report_path_candidate, 'r', encoding='utf-8') as fh:
-                        loaded_report = json.load(fh)
-                    
-                    # ✅ PRINT STATEMENT ADDED
-                    print(f"✅ Successfully loaded report from: {report_path_candidate}")
-                    print("--- REPORT CONTENT ---")
-                    print(json.dumps(loaded_report, indent=2))
-                    print("----------------------")
-                    
+                report_path_candidate = metadata.get('tamper_report_path') or metadata.get('report_path')
+                if isinstance(report_path_candidate, str):
+                    report_path_candidate = os.path.normpath(report_path_candidate)
                 else:
-                    return JSONResponse(content={"error": f"Report file not found: {report_path_candidate}"}, status_code=400)
-            except Exception as e:
-                return JSONResponse(content={"error": f"Failed to read report file: {str(e)}"}, status_code=500)
+                    report_path_candidate = None
+            except Exception:
+                report_path_candidate = None
+            
+            if report_path_candidate:
+                try:
+                    if not os.path.normpath(report_path_candidate).startswith(os.path.normpath(UPLOAD_DIR)):
+                        print(f"⚠️ Report path access denied: {report_path_candidate}")
+                    elif os.path.exists(report_path_candidate):
+                        with open(report_path_candidate, 'r', encoding='utf-8') as fh:
+                            loaded_report = json.load(fh)
+                        print(f"✅ Loaded report from file: {report_path_candidate}")
+                    else:
+                        print(f"⚠️ Report file not found: {report_path_candidate}")
+                except Exception as e:
+                    print(f"⚠️ Failed to load report file: {str(e)}")
 
-        # If we loaded a report, use it; otherwise use the provided metadata
+        # If we found a report (nested or from file), extract its data; otherwise use metadata
         gemini_input = loaded_report if loaded_report is not None else metadata
 
         # Use the fields you specified (anomaly_score, anomaly_detected, status)
