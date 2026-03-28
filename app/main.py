@@ -512,15 +512,34 @@ Return **ONLY** a valid JSON output in the specified format. Do **NOT** include 
             print("🔹 Raw Gemini Response:", raw_response[:200] + "..." if len(raw_response) > 200 else raw_response)
         except Exception as e:
             print(f"⚠️ Gemini API error: {str(e)}")
-            # Return safe default response if API fails
+            
+            # Extract actual anomaly values from tamper report for fallback
+            actual_anomaly_detected = False
+            actual_integrity_score = 75
+            actual_risk_level = "low"
+            try:
+                if isinstance(gemini_input, dict):
+                    tr = gemini_input.get('tamper_report') or gemini_input
+                    if isinstance(tr, dict):
+                        actual_anomaly_detected = tr.get('anomaly_detected', False)
+                        actual_integrity_score = tr.get('anomaly_score') or tr.get('integrity_score', 75)
+                        actual_risk_level = tr.get('status', 'low')
+                        if actual_risk_level == 'red':
+                            actual_risk_level = 'high'
+                        elif actual_risk_level == 'normal':
+                            actual_risk_level = 'low'
+            except Exception:
+                pass
+            
+            # Return safe default response WITH ACTUAL DETECTION RESULTS
             return JSONResponse(content={
-                "anomaly_detected": False,
-                "risk_level": "low",
-                "reason": "Analysis unavailable. File appears safe based on automated checks.",
-                "technical_analysis": "Analysis unavailable. File appears safe based on automated checks.",
-                "recommendations": ["Try again if you need detailed AI analysis"],
+                "anomaly_detected": actual_anomaly_detected,  # ✅ USE REAL VALUE
+                "risk_level": actual_risk_level,  # ✅ USE REAL VALUE
+                "reason": "Analysis unavailable. Results based on automated forensic checks.",
+                "technical_analysis": "Analysis unavailable. Results based on automated forensic checks.",
+                "recommendations": ["Review the forensic analysis above", "Try manual inspection if needed"],
                 "best_practices": ["Ensure files are from trusted sources", "Regularly verify file authenticity"],
-                "integrity_score": 75,
+                "integrity_score": int(actual_integrity_score),  # ✅ USE REAL VALUE
                 "detailed_breakdown": {"file_size": 0, "file_metadata_discrepancy": 0, "image_resolution": 0, "image_hash": 0},
                 "metadata_summary": {"brief_summary": {"title": "File Properties Overview", "content": []}, "authenticity": {"title": "Authenticity & Manipulation Analysis", "content": []}, "metadata_table": {"title": "Metadata Analysis Table", "headers": ["Field", "Value", "Status"], "rows": []}, "use_cases": {"title": "Recommended Applications", "content": []}}
             }, status_code=200)
@@ -539,15 +558,27 @@ Return **ONLY** a valid JSON output in the specified format. Do **NOT** include 
             print("❌ Gemini returned invalid JSON!")
             return JSONResponse(content={"error": "Invalid JSON from Gemini", "raw_output": raw_response}, status_code=500)
 
-        # Add fallback defaults
+        # Get actual anomaly values from tamper report
+        actual_anomaly_detected = False
+        actual_integrity_score = 75
+        try:
+            if isinstance(gemini_input, dict):
+                tr = gemini_input.get('tamper_report') or gemini_input
+                if isinstance(tr, dict):
+                    actual_anomaly_detected = tr.get('anomaly_detected', False)
+                    actual_integrity_score = tr.get('anomaly_score') or tr.get('integrity_score', 75)
+        except Exception:
+            pass
+
+        # Add fallback defaults - but preserve ACTUAL anomaly detection from forensics
         result = {
-            "anomaly_detected": result.get("anomaly_detected", False),
+            "anomaly_detected": actual_anomaly_detected,  # ✅ USE ACTUAL VALUE FROM FORENSICS
             "reason": result.get("reason") or result.get("technical_analysis", "File analysis complete."),
             "best_practices": result.get("best_practices", ["Ensure files are from trusted sources", "Keep security updated"]),
             "risk_level": result.get("risk_level", "low"),
             "technical_analysis": result.get("technical_analysis", "No detailed report available."),
             "recommendations": result.get("recommendations", []),
-            "integrity_score": result.get("integrity_score", 100),
+            "integrity_score": int(actual_integrity_score),  # ✅ USE ACTUAL VALUE FROM FORENSICS
             "detailed_breakdown": result.get("detailed_breakdown", {
                 "file_size": 0,
                 "file_metadata_discrepancy": 0,
