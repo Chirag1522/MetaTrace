@@ -1,5 +1,5 @@
-# Use Python 3.11 slim image
-FROM python:3.11-slim
+# Use Python 3.11 image (not slim - needs more memory)
+FROM python:3.11
 
 # Install system dependencies including exiftool
 RUN apt-get update && apt-get install -y \
@@ -25,5 +25,5 @@ RUN mkdir -p ./uploads
 # Expose port
 EXPOSE 8000
 
-# Run the application
-CMD ["gunicorn", "-w", "4", "-b", "0.0.0.0:8000", "-k", "uvicorn.workers.UvicornWorker", "main:app"]
+# Run with increased timeout and worker settings
+CMD ["gunicorn", "-w", "2", "-b", "0.0.0.0:8000", "-k", "uvicorn.workers.UvicornWorker", "--timeout", "120", "--keep-alive", "5", "main:app"]
