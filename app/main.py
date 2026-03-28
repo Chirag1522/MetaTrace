@@ -504,14 +504,16 @@ Return **ONLY** a valid JSON output in the specified format. Do **NOT** include 
         print("🔹 Sending request to Gemini...")
 
         # ✅ Using valid model
-        model = genai.GenerativeModel("models/gemini-2.5-flash")
+        model = genai.GenerativeModel("models/gemini-1.5-flash")  # ✅ Changed to faster model
         try:
+            print("📤 Calling Gemini API with prompt length:", len(prompt))
             # Call Gemini API (gunicorn timeout is 120s)
             response = model.generate_content(prompt)
             raw_response = response.text.strip()
+            print("✅ Gemini API success! Response length:", len(raw_response))
             print("🔹 Raw Gemini Response:", raw_response[:200] + "..." if len(raw_response) > 200 else raw_response)
         except Exception as e:
-            print(f"⚠️ Gemini API error: {str(e)}")
+            print(f"⚠️ Gemini API error: {type(e).__name__}: {str(e)}")
             
             # Extract actual anomaly values from tamper report for fallback
             actual_anomaly_detected = False
@@ -531,21 +533,54 @@ Return **ONLY** a valid JSON output in the specified format. Do **NOT** include 
             except Exception:
                 pass
             
+            # Extract metadata for better fallback response
+            metadata_summary = {"brief_summary": {"title": "File Properties Overview", "content": []}, 
+                               "authenticity": {"title": "Authenticity & Manipulation Analysis", "content": []},
+                               "metadata_table": {"title": "Metadata Analysis Table", "headers": ["Field", "Value", "Status"], "rows": []},
+                               "use_cases": {"title": "Recommended Applications", "content": []}}
+            
+            try:
+                if isinstance(gemini_input, dict):
+                    # Extract basic properties
+                    props = []
+                    if gemini_input.get('originalFilename'):
+                        props.append(f"File: {gemini_input.get('originalFilename')}")
+                    if gemini_input.get('FileSize'):
+                        props.append(f"Size: {gemini_input.get('FileSize')}")
+                    if gemini_input.get('MIMEType'):
+                        props.append(f"Type: {gemini_input.get('MIMEType')}")
+                    if props:
+                        metadata_summary["brief_summary"]["content"] = props
+                    
+                    # Extract authenticity findings
+                    auth_findings = []
+                    tr = gemini_input.get('tamper_report') or {}
+                    if isinstance(tr, dict):
+                        if tr.get('anomaly_detected'):
+                            auth_findings.append("Potential tampering detected in forensic analysis")
+                        else:
+                            auth_findings.append("File appears authentic based on forensic checks")
+                        if tr.get('summary'):
+                            for reason in (tr.get('summary', {}).get('reasons') or [])[:2]:
+                                auth_findings.append(str(reason))
+                    if not auth_findings:
+                        auth_findings = ["Forensic analysis complete"]
+                    metadata_summary["authenticity"]["content"] = auth_findings
+            except Exception as ex:
+                print(f"⚠️ Error extracting fallback metadata: {str(ex)}")
+            
             # Return safe default response WITH ACTUAL DETECTION RESULTS
             return JSONResponse(content={
                 "anomaly_detected": actual_anomaly_detected,  # ✅ USE REAL VALUE
                 "risk_level": actual_risk_level,  # ✅ USE REAL VALUE
-                "reason": "Analysis unavailable. Results based on automated forensic checks.",
-                "technical_analysis": "Analysis unavailable. Results based on automated forensic checks.",
+                "reason": "AI analysis unavailable. Results based on automated forensic checks.",
+                "technical_analysis": "AI analysis unavailable. Results based on automated forensic checks.",
                 "recommendations": ["Review the forensic analysis above", "Try manual inspection if needed"],
                 "best_practices": ["Ensure files are from trusted sources", "Regularly verify file authenticity"],
                 "integrity_score": int(actual_integrity_score),  # ✅ USE REAL VALUE
                 "detailed_breakdown": {"file_size": 0, "file_metadata_discrepancy": 0, "image_resolution": 0, "image_hash": 0},
-                "metadata_summary": {"brief_summary": {"title": "File Properties Overview", "content": []}, "authenticity": {"title": "Authenticity & Manipulation Analysis", "content": []}, "metadata_table": {"title": "Metadata Analysis Table", "headers": ["Field", "Value", "Status"], "rows": []}, "use_cases": {"title": "Recommended Applications", "content": []}}
+                "metadata_summary": metadata_summary
             }, status_code=200)
-        except Exception as e:
-            print(f"❌ Gemini API error: {str(e)}")
-            return JSONResponse(content={"error": f"Gemini API error: {str(e)}"}, status_code=500)
 
         # Extract JSON safely
         match = re.search(r"\{.*\}", raw_response, re.DOTALL)
