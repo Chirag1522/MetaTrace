@@ -8,7 +8,7 @@ from fastapi import FastAPI, File, UploadFile, Form, HTTPException
 from fastapi.responses import JSONResponse
 from fastapi.middleware.cors import CORSMiddleware
 # web3 removed: blockchain uploading disabled in main.py
-import google.generativeai as genai  # ✅ Gemini integration
+from groq import Groq  # ✅ Groq Llama integration
 import tamper_audit as tamper_audit_module
 from tamper_audit import analyze_image_for_anomalies
 
@@ -48,8 +48,11 @@ contract_abi = [
 # Blockchain uploading disabled in this build. The contract/web3 objects are not used.
 contract = None
 
-# ✅ Initialize Gemini API with your key
-genai.configure(api_key="AIzaSyCQ9R_2svfu_xqmwospclxEI-5x_C-50bQ")
+# ✅ Initialize Groq API with key from environment variable
+GROQ_API_KEY = os.getenv("GROQ_API_KEY")
+if not GROQ_API_KEY:
+    raise ValueError("❌ GROQ_API_KEY environment variable not set!")
+groq_client = Groq(api_key=GROQ_API_KEY)
 
 # ========== Middleware ==========
 app = FastAPI()
@@ -501,19 +504,22 @@ Return **ONLY** a valid JSON output in the specified format. Do **NOT** include 
 """
         # --- END NEW PROMPT ---
 
-        print("🔹 Sending request to Gemini...")
+        print("🔹 Sending request to Groq LLM...")
 
-        # ✅ Using valid model
-        model = genai.GenerativeModel("models/gemini-1.5-flash")  # ✅ Changed to faster model
         try:
-            print("📤 Calling Gemini API with prompt length:", len(prompt))
-            # Call Gemini API (gunicorn timeout is 120s)
-            response = model.generate_content(prompt)
-            raw_response = response.text.strip()
-            print("✅ Gemini API success! Response length:", len(raw_response))
-            print("🔹 Raw Gemini Response:", raw_response[:200] + "..." if len(raw_response) > 200 else raw_response)
+            print("📤 Calling Groq API with prompt length:", len(prompt))
+            # Call Groq API (fast, reliable)
+            response = groq_client.chat.completions.create(
+                model="llama-3.3-70b-versatile",
+                messages=[{"role": "user", "content": prompt}],
+                temperature=0.7,
+                max_tokens=2048
+            )
+            raw_response = response.choices[0].message.content.strip()
+            print("✅ Groq API success! Response length:", len(raw_response))
+            print("🔹 Raw Response:", raw_response[:200] + "..." if len(raw_response) > 200 else raw_response)
         except Exception as e:
-            print(f"⚠️ Gemini API error: {type(e).__name__}: {str(e)}")
+            print(f"⚠️ Groq API error: {type(e).__name__}: {str(e)}")"
             
             # Extract actual anomaly values from tamper report for fallback
             actual_anomaly_detected = False
