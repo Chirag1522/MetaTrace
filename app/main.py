@@ -390,63 +390,60 @@ async def recommend(metadata: dict): # Signature requires a JSON object
         actual_status = "normal"
         actual_risk_level = "low"
         
-        try:
-            if isinstance(gemini_input, dict):
-                # Try nested tamper_report first
-                tr = gemini_input.get('tamper_report')
-                
-                # If not found, try direct access (gemini_input might be the tamper_report itself)
-                if not isinstance(tr, dict):
-                    tr = gemini_input
-                
-                print(f"🔍 Extracting SOURCE OF TRUTH from: {type(tr).__name__}")
-                
-                if isinstance(tr, dict):
-                    # Extract the SOURCE OF TRUTH value - try multiple possible field names
-                    score_val = tr.get('anomaly_score')
-                    if score_val is None:
-                        score_val = tr.get('integrity_score')
-                    if score_val is None:
-                        score_val = (tr.get('summary') or {}).get('score_estimate_out_of_100')
-                    
-                    print(f"📊 Score value extracted: {score_val} (type: {type(score_val).__name__})")
-                    
-                    # Parse anomaly_score
-                    if score_val is not None:
-                        try:
-                            actual_integrity_score = int(score_val)
-                            print(f"✅ Parsed score to int: {actual_integrity_score}")
-                        except (ValueError, TypeError):
-                            try:
-                                actual_integrity_score = int(float(score_val))
-                                print(f"✅ Parsed score via float: {actual_integrity_score}")
-                            except (ValueError, TypeError):
-                                print(f"⚠️ Could not parse score: {score_val}, using default 75")
-                                actual_integrity_score = 75
-                    else:
-                        print(f"⚠️ No score found in report, using default 75")
-                    
-                    # ✅ SIMPLE RULE: score < 90 = tampered, >= 90 = clean
-                    # Do NOT use anomaly_detected from report - recalculate based on score
-                    if actual_integrity_score < 90:
-                        actual_anomaly_detected = True  # TAMPERED
-                        actual_status = 'red'
-                        actual_risk_level = 'high'
-                    else:
-                        actual_anomaly_detected = False  # CLEAN
-                        actual_status = 'normal'
-                        actual_risk_level = 'low'
-                    
-                    print(f"🔴 SOURCE OF TRUTH CALCULATED (score-based rule):")
-                    print(f"   - Score: {actual_integrity_score}/100")
-                    print(f"   - Rule: score < 90 → TAMPERED, >= 90 → CLEAN")
-                    print(f"   - anomaly_detected={actual_anomaly_detected} ({'TAMPERED' if actual_anomaly_detected else 'CLEAN'})")
-                    print(f"   - status={actual_status}")
-                    print(f"   - risk_level={actual_risk_level}")
-                else:
-                    print(f"⚠️ Could not extract tamper_report, gemini_input type: {type(gemini_input)}")
-        except Exception as e:
-            print(f"⚠️ Error calculating SOURCE OF TRUTH: {type(e).__name__}: {str(e)}")
+        print(f"🔍 DEBUG: gemini_input type = {type(gemini_input).__name__}, keys = {list(gemini_input.keys()) if isinstance(gemini_input, dict) else 'N/A'}")
+        
+        # Direct extraction without nested complexity
+        if isinstance(gemini_input, dict):
+            # Try to get the anomaly score directly from multiple locations
+            score_val = None
+            
+            # Location 1: anomaly_score field (most common)
+            if 'anomaly_score' in gemini_input:
+                score_val = gemini_input['anomaly_score']
+                print(f"📊 Found anomaly_score: {score_val}")
+            
+            # Location 2: Inside nested tamper_report
+            elif 'tamper_report' in gemini_input and isinstance(gemini_input['tamper_report'], dict):
+                score_val = gemini_input['tamper_report'].get('anomaly_score')
+                print(f"📊 Found in nested tamper_report.anomaly_score: {score_val}")
+            
+            # Location 3: Inside summary
+            elif 'summary' in gemini_input and isinstance(gemini_input['summary'], dict):
+                score_val = gemini_input['summary'].get('score_estimate_out_of_100')
+                print(f"📊 Found in summary.score_estimate_out_of_100: {score_val}")
+            
+            # Location 4: integrity_score fallback
+            elif 'integrity_score' in gemini_input:
+                score_val = gemini_input['integrity_score']
+                print(f"📊 Found integrity_score: {score_val}")
+            
+            # Now parse the score
+            if score_val is not None:
+                try:
+                    actual_integrity_score = int(score_val)
+                    print(f"✅ Successfully parsed score: {actual_integrity_score}")
+                except (ValueError, TypeError):
+                    try:
+                        actual_integrity_score = int(float(str(score_val)))
+                        print(f"✅ Parsed score via float conversion: {actual_integrity_score}")
+                    except Exception as parse_error:
+                        print(f"⚠️ Parse error for {score_val}: {parse_error}, using default 75")
+                        actual_integrity_score = 75
+            else:
+                print(f"⚠️ No score found in any location, using default 75")
+                actual_integrity_score = 75
+            
+            # ✅ SIMPLE RULE: score < 90 = tampered, >= 90 = clean
+            if actual_integrity_score < 90:
+                actual_anomaly_detected = True
+                actual_status = 'red'
+                actual_risk_level = 'high'
+            else:
+                actual_anomaly_detected = False
+                actual_status = 'normal'
+                actual_risk_level = 'low'
+            
+            print(f"🔴 SOURCE OF TRUTH FINAL: score={actual_integrity_score}, anomaly_detected={actual_anomaly_detected}, status={actual_status}")
 
         # Use the extracted values to build a strong hint for Groq
         score_hint = f"""🔴 VERDICT ALREADY DETERMINED:
