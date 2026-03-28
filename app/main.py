@@ -66,18 +66,28 @@ def calculate_file_hash(content: bytes) -> str:
     return hashlib.sha256(content).hexdigest()
 
 def extract_metadata(file_path: str) -> dict:
-    """Extract metadata using ExifTool with error handling."""
+    """Extract metadata using ExifTool with graceful fallback."""
     try:
         result = subprocess.run(
             ["exiftool", "-json", file_path],
             capture_output=True,
             text=True,
-            check=True,
+            timeout=5,
+            check=False,  # ✅ Don't raise on non-zero exit
         )
-        metadata_list = json.loads(result.stdout)
-        return metadata_list[0] if metadata_list else {}
+        if result.returncode == 0 and result.stdout:
+            metadata_list = json.loads(result.stdout)
+            return metadata_list[0] if metadata_list else {}
+        else:
+            # ExifTool failed or not installed - return basic fallback
+            return {"source": "exiftool_unavailable", "filepath": file_path}
+    except (FileNotFoundError, json.JSONDecodeError, subprocess.TimeoutExpired):
+        # ExifTool not installed or JSON parsing failed - return graceful fallback
+        return {"source": "metadata_extraction_failed", "filepath": file_path}
     except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Metadata extraction error: {str(e)}")
+        # Any other error - still be graceful
+        print(f"⚠️ Warning: Metadata extraction error: {str(e)}")
+        return {"source": "metadata_extraction_failed", "error": str(e)}
 
 def store_metadata_on_chain(metadata: dict) -> dict:
     """Blockchain uploading is disabled in this build.
@@ -90,9 +100,11 @@ def store_metadata_on_chain(metadata: dict) -> dict:
 @app.post("/upload/")
 async def upload_file(file: UploadFile = File(...), email: str = Form(...)):
     """Handles file upload, metadata extraction, and blockchain storage."""
+    print(f"📥 Processing upload: filename={file.filename}, email={email}, content_type={file.content_type}")
     try:
         file_path = os.path.join(UPLOAD_DIR, file.filename)
         content = await file.read()
+        print(f"✅ File read successfully. Size: {len(content)} bytes")
         file_hash = calculate_file_hash(content)
 
         with open(file_path, "wb") as buffer:
