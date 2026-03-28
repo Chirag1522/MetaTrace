@@ -392,20 +392,39 @@ async def recommend(metadata: dict): # Signature requires a JSON object
         
         try:
             if isinstance(gemini_input, dict):
-                tr = gemini_input.get('tamper_report') or gemini_input
+                # Try nested tamper_report first
+                tr = gemini_input.get('tamper_report')
+                
+                # If not found, try direct access (gemini_input might be the tamper_report itself)
+                if not isinstance(tr, dict):
+                    tr = gemini_input
+                
+                print(f"🔍 Extracting SOURCE OF TRUTH from: {type(tr).__name__}")
+                
                 if isinstance(tr, dict):
-                    # Extract the SOURCE OF TRUTH value
+                    # Extract the SOURCE OF TRUTH value - try multiple possible field names
                     score_val = tr.get('anomaly_score')
+                    if score_val is None:
+                        score_val = tr.get('integrity_score')
+                    if score_val is None:
+                        score_val = (tr.get('summary') or {}).get('score_estimate_out_of_100')
+                    
+                    print(f"📊 Score value extracted: {score_val} (type: {type(score_val).__name__})")
                     
                     # Parse anomaly_score
                     if score_val is not None:
                         try:
                             actual_integrity_score = int(score_val)
-                        except Exception:
+                            print(f"✅ Parsed score to int: {actual_integrity_score}")
+                        except (ValueError, TypeError):
                             try:
                                 actual_integrity_score = int(float(score_val))
-                            except Exception:
+                                print(f"✅ Parsed score via float: {actual_integrity_score}")
+                            except (ValueError, TypeError):
+                                print(f"⚠️ Could not parse score: {score_val}, using default 75")
                                 actual_integrity_score = 75
+                    else:
+                        print(f"⚠️ No score found in report, using default 75")
                     
                     # ✅ SIMPLE RULE: score < 90 = tampered, >= 90 = clean
                     # Do NOT use anomaly_detected from report - recalculate based on score
@@ -424,8 +443,10 @@ async def recommend(metadata: dict): # Signature requires a JSON object
                     print(f"   - anomaly_detected={actual_anomaly_detected} ({'TAMPERED' if actual_anomaly_detected else 'CLEAN'})")
                     print(f"   - status={actual_status}")
                     print(f"   - risk_level={actual_risk_level}")
+                else:
+                    print(f"⚠️ Could not extract tamper_report, gemini_input type: {type(gemini_input)}")
         except Exception as e:
-            print(f"⚠️ Error calculating SOURCE OF TRUTH: {str(e)}")
+            print(f"⚠️ Error calculating SOURCE OF TRUTH: {type(e).__name__}: {str(e)}")
 
         # Use the extracted values to build a strong hint for Groq
         score_hint = f"""🔴 VERDICT ALREADY DETERMINED:
@@ -540,17 +561,44 @@ You are a metadata forensics analyst. Your role is to EXPLAIN forensic findings,
             actual_risk_level = "low"
             try:
                 if isinstance(gemini_input, dict):
-                    tr = gemini_input.get('tamper_report') or gemini_input
+                    # Try nested tamper_report first
+                    tr = gemini_input.get('tamper_report')
+                    
+                    # If not found, try direct access
+                    if not isinstance(tr, dict):
+                        tr = gemini_input
+                    
                     if isinstance(tr, dict):
                         actual_anomaly_detected = tr.get('anomaly_detected', False)
-                        actual_integrity_score = tr.get('anomaly_score') or tr.get('integrity_score', 75)
-                        actual_risk_level = tr.get('status', 'low')
-                        if actual_risk_level == 'red':
+                        
+                        # Try to get score from any possible field
+                        score_val = tr.get('anomaly_score')
+                        if score_val is None:
+                            score_val = tr.get('integrity_score')
+                        if score_val is None:
+                            score_val = (tr.get('summary') or {}).get('score_estimate_out_of_100')
+                        
+                        # Parse the score
+                        if score_val is not None:
+                            try:
+                                actual_integrity_score = int(score_val)
+                            except (ValueError, TypeError):
+                                try:
+                                    actual_integrity_score = int(float(score_val))
+                                except (ValueError, TypeError):
+                                    actual_integrity_score = 75
+                        
+                        # Recalculate based on score
+                        if actual_integrity_score < 90:
+                            actual_anomaly_detected = True
                             actual_risk_level = 'high'
-                        elif actual_risk_level == 'normal':
+                        else:
+                            actual_anomaly_detected = False
                             actual_risk_level = 'low'
-            except Exception:
-                pass
+                        
+                        print(f"✅ Fallback extraction: score={actual_integrity_score}, anomaly_detected={actual_anomaly_detected}")
+            except Exception as ex:
+                print(f"⚠️ Error in fallback extraction: {type(ex).__name__}: {str(ex)}")
             
             # Extract metadata for better fallback response
             metadata_summary = {"brief_summary": {"title": "File Properties Overview", "content": []}, 
