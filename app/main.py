@@ -519,7 +519,7 @@ Return **ONLY** a valid JSON output in the specified format. Do **NOT** include 
             print("✅ Groq API success! Response length:", len(raw_response))
             print("🔹 Raw Response:", raw_response[:200] + "..." if len(raw_response) > 200 else raw_response)
         except Exception as e:
-            print(f"⚠️ Groq API error: {type(e).__name__}: {str(e)}")"
+            print(f"⚠️ Groq API error: {type(e).__name__}: {str(e)}")
             
             # Extract actual anomaly values from tamper report for fallback
             actual_anomaly_detected = False
