@@ -419,8 +419,10 @@ async def recommend(metadata: dict): # Signature requires a JSON object
             return JSONResponse(content={
                 "anomaly_detected": False,
                 "risk_level": "low",
+                "reason": "Analysis unavailable. File appears safe based on automated checks.",
                 "technical_analysis": "Analysis unavailable. File appears safe based on automated checks.",
                 "recommendations": ["Try again if you need detailed AI analysis"],
+                "best_practices": ["Ensure files are from trusted sources", "Regularly verify file authenticity"],
                 "integrity_score": 75,
                 "detailed_breakdown": {"file_size": 0, "file_metadata_discrepancy": 0, "image_resolution": 0, "image_hash": 0},
                 "metadata_summary": {"brief_summary": {"title": "File Properties Overview", "content": []}, "authenticity": {"title": "Authenticity & Manipulation Analysis", "content": []}, "metadata_table": {"title": "Metadata Analysis Table", "headers": ["Field", "Value", "Status"], "rows": []}, "use_cases": {"title": "Recommended Applications", "content": []}}
@@ -443,6 +445,8 @@ async def recommend(metadata: dict): # Signature requires a JSON object
         # Add fallback defaults
         result = {
             "anomaly_detected": result.get("anomaly_detected", False),
+            "reason": result.get("reason") or result.get("technical_analysis", "File analysis complete."),
+            "best_practices": result.get("best_practices", ["Ensure files are from trusted sources", "Keep security updated"]),
             "risk_level": result.get("risk_level", "low"),
             "technical_analysis": result.get("technical_analysis", "No detailed report available."),
             "recommendations": result.get("recommendations", []),
