@@ -51,7 +51,7 @@ except Exception:
 # Configuration / thresholds
 # --------------------------
 LOCAL_SUSY_PATH = "SuSy.pt"   # path to local SuSy model
-USE_LOCAL_SUSY = True
+USE_LOCAL_SUSY = False  # Disabled for production (model file not included in deployment)
 COPYMOVE_MIN_MATCHES = 20
 ELA_MEAN_SUSPICIOUS = 15.0
 ELA_STD_SUSPICIOUS = 8.0
