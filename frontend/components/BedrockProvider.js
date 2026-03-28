@@ -8,7 +8,7 @@ const BedrockProvider = ({ children }) => {
   return (
     <BedrockPassportProvider
       baseUrl="https://api.bedrockpassport.com"
-      authCallbackUrl="http://localhost:3000/auth/callback" // or your deployed URL
+      authCallbackUrl="https://metatrace-frontend.vercel.app/auth/callback" // or your deployed URL
       tenantId="your-tenant-id-here"
     >
       {children}
