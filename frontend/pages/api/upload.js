@@ -51,9 +51,9 @@ try {
 
 // 🔹 Cloudinary Configuration
 cloudinary.config({
-  cloud_name: "chirag84",
-  api_key: "479271181843866",
-  api_secret: "0AKvBBfVnjjCRIU83Dr4_cqevvk",
+  cloud_name: process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME || "chirag84",
+  api_key: process.env.CLOUDINARY_API_KEY || "479271181843866",
+  api_secret: process.env.CLOUDINARY_API_SECRET,  // ⚠️ MUST be in env vars, never hardcode!
 });
 
 // 🔹 Function to Upload to Pinata IPFS
