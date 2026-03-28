@@ -1,5 +1,4 @@
 import formidable from "formidable";
-import { v2 as cloudinary } from "cloudinary";
 import { MongoClient } from "mongodb";
 import fs from "fs"; 
 import fetch from "node-fetch";
@@ -48,14 +47,6 @@ try {
 } catch (error) {
   console.error("❌ Failed to connect to blockchain:", error);
 }
-
-// 🔹 Cloudinary Configuration
-cloudinary.config({
-  cloud_name: process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME,
-  api_key: process.env.CLOUDINARY_API_KEY,
-  // api_secret is only needed for backend operations (delete, update)
-  // Not required for file uploads through the SDK
-});
 
 // 🔹 Function to Upload to Pinata IPFS
 async function uploadToPinata(filePath, fileName) {
@@ -154,13 +145,6 @@ export default async function handler(req, res) {
           return res.status(400).json({ message: "Missing file or email" });
         }
 
-        console.log("📤 Uploading file to Cloudinary...");
-        const uploadResult = await cloudinary.uploader.upload(file.filepath, { 
-          folder: "uploads",
-          resource_type: "raw"  // 👈 Allows ZIP file uploads
-        });
-        console.log(`✅ File uploaded to Cloudinary: ${uploadResult.secure_url}`);
-
         console.log("📤 Uploading file to Pinata IPFS...");
         const ipfsHash = await uploadToPinata(file.filepath, file.originalFilename);
         const ipfsUrl = `https://gateway.pinata.cloud/ipfs/${ipfsHash}`; // Pinata URL
@@ -198,9 +182,8 @@ export default async function handler(req, res) {
         const fileData = {
           email,
           filename: file.originalFilename,
-          cloudinaryUrl: uploadResult.secure_url,
           ipfsUrl,
-          pinataCid: ipfsHash, // Store the pinataCid for easy deletion
+          pinataCid: ipfsHash,
           type: file.mimetype,
           size: file.size,
           uploadDate: new Date(),
@@ -218,7 +201,7 @@ export default async function handler(req, res) {
         console.log("🧹 Temporary file deleted.");
 
         // 🔹 Store Metadata on Blockchain
-        const blockchainResponse = await storeOnBlockchain({ ...fileData, cloudinaryUrl: undefined });
+        const blockchainResponse = await storeOnBlockchain(fileData);
 
         return res.status(200).json({
           metadata: fileData,
