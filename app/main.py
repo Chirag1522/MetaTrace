@@ -347,25 +347,66 @@ async def recommend(metadata: dict): # Signature requires a JSON object
         if not metadata:
             return JSONResponse(content={"error": "No metadata provided"}, status_code=400)
 
+        def _to_dict(value):
+            if isinstance(value, dict):
+                return value
+            if isinstance(value, str):
+                try:
+                    parsed = json.loads(value)
+                    if isinstance(parsed, dict):
+                        return parsed
+                except Exception:
+                    return None
+            return None
+
+        def _to_int(value):
+            if value is None or isinstance(value, bool):
+                return None
+            try:
+                return int(value)
+            except Exception:
+                try:
+                    return int(float(str(value).strip()))
+                except Exception:
+                    return None
+
+        def _to_bool(value):
+            if isinstance(value, bool):
+                return value
+            if isinstance(value, str):
+                lowered = value.strip().lower()
+                if lowered in {"true", "1", "yes"}:
+                    return True
+                if lowered in {"false", "0", "no"}:
+                    return False
+            return None
+
+        root_payload = metadata if isinstance(metadata, dict) else {}
+        payload_metadata = _to_dict(root_payload.get("metadata")) if isinstance(root_payload, dict) else None
+
         # --- CRITICAL FIX: Use nested tamper_report from metadata first ---
         loaded_report = None
         
         # PRIORITY 1: Check if tamper_report is already nested in metadata (from upload endpoint)
-        if isinstance(metadata, dict) and 'tamper_report' in metadata:
-            loaded_report = metadata.get('tamper_report')
-            print(f"✅ Using nested tamper_report from metadata")
+        if isinstance(root_payload, dict) and 'tamper_report' in root_payload:
+            loaded_report = _to_dict(root_payload.get('tamper_report'))
+            print("✅ Using nested tamper_report from metadata")
+
+        # PRIORITY 1B: Handle payloads shaped like { metadata: { ..., tamper_report: {...} } }
+        if loaded_report is None and isinstance(payload_metadata, dict) and 'tamper_report' in payload_metadata:
+            loaded_report = _to_dict(payload_metadata.get('tamper_report'))
+            print("✅ Using nested tamper_report from payload.metadata")
         
         # PRIORITY 2: Try to load from file path (fallback)
         if loaded_report is None:
             report_path_candidate = None
-            try:
-                report_path_candidate = metadata.get('tamper_report_path') or metadata.get('report_path')
-                if isinstance(report_path_candidate, str):
-                    report_path_candidate = os.path.normpath(report_path_candidate)
-                else:
-                    report_path_candidate = None
-            except Exception:
-                report_path_candidate = None
+            for source in (root_payload, payload_metadata):
+                if not isinstance(source, dict):
+                    continue
+                candidate = source.get('tamper_report_path') or source.get('report_path')
+                if isinstance(candidate, str) and candidate.strip():
+                    report_path_candidate = os.path.normpath(candidate)
+                    break
             
             if report_path_candidate:
                 try:
@@ -380,70 +421,65 @@ async def recommend(metadata: dict): # Signature requires a JSON object
                 except Exception as e:
                     print(f"⚠️ Failed to load report file: {str(e)}")
 
-        # If we found a report (nested or from file), extract its data; otherwise use metadata
-        gemini_input = loaded_report if loaded_report is not None else metadata
-
         # ⚠️ CRITICAL: Extract forensic SOURCE OF TRUTH VALUES FIRST (before Groq call)
         # These will OVERRIDE whatever Groq returns - forensics are the authority
-        actual_anomaly_detected = False
-        actual_integrity_score = 75
-        actual_status = "normal"
-        actual_risk_level = "low"
-        
-        print(f"🔍 DEBUG: gemini_input type = {type(gemini_input).__name__}, keys = {list(gemini_input.keys()) if isinstance(gemini_input, dict) else 'N/A'}")
-        
-        # Direct extraction without nested complexity
-        if isinstance(gemini_input, dict):
-            # Try to get the anomaly score directly from multiple locations
-            score_val = None
-            
-            # Location 1: anomaly_score field (most common)
-            if 'anomaly_score' in gemini_input:
-                score_val = gemini_input['anomaly_score']
-                print(f"📊 Found anomaly_score: {score_val}")
-            
-            # Location 2: Inside nested tamper_report
-            elif 'tamper_report' in gemini_input and isinstance(gemini_input['tamper_report'], dict):
-                score_val = gemini_input['tamper_report'].get('anomaly_score')
-                print(f"📊 Found in nested tamper_report.anomaly_score: {score_val}")
-            
-            # Location 3: Inside summary
-            elif 'summary' in gemini_input and isinstance(gemini_input['summary'], dict):
-                score_val = gemini_input['summary'].get('score_estimate_out_of_100')
-                print(f"📊 Found in summary.score_estimate_out_of_100: {score_val}")
-            
-            # Location 4: integrity_score fallback
-            elif 'integrity_score' in gemini_input:
-                score_val = gemini_input['integrity_score']
-                print(f"📊 Found integrity_score: {score_val}")
-            
-            # Now parse the score
-            if score_val is not None:
-                try:
-                    actual_integrity_score = int(score_val)
-                    print(f"✅ Successfully parsed score: {actual_integrity_score}")
-                except (ValueError, TypeError):
-                    try:
-                        actual_integrity_score = int(float(str(score_val)))
-                        print(f"✅ Parsed score via float conversion: {actual_integrity_score}")
-                    except Exception as parse_error:
-                        print(f"⚠️ Parse error for {score_val}: {parse_error}, using default 75")
-                        actual_integrity_score = 75
-            else:
-                print(f"⚠️ No score found in any location, using default 75")
-                actual_integrity_score = 75
-            
-            # ✅ SIMPLE RULE: score < 90 = tampered, >= 90 = clean
-            if actual_integrity_score < 90:
-                actual_anomaly_detected = True
-                actual_status = 'red'
-                actual_risk_level = 'high'
-            else:
-                actual_anomaly_detected = False
-                actual_status = 'normal'
-                actual_risk_level = 'low'
-            
-            print(f"🔴 SOURCE OF TRUTH FINAL: score={actual_integrity_score}, anomaly_detected={actual_anomaly_detected}, status={actual_status}")
+        actual_anomaly_detected = None
+        actual_integrity_score = None
+        actual_status = None
+
+        candidates = []
+        for candidate in (loaded_report, payload_metadata, root_payload):
+            if isinstance(candidate, dict):
+                candidates.append(candidate)
+
+        gemini_input = candidates[0] if candidates else root_payload
+
+        print(f"🔍 DEBUG: normalized payload type = {type(gemini_input).__name__}, keys = {list(gemini_input.keys()) if isinstance(gemini_input, dict) else 'N/A'}")
+
+        # Find score from the richest available source first (tamper_report, metadata, then root payload).
+        for candidate in candidates:
+            score_val = candidate.get('anomaly_score')
+            if score_val is None:
+                score_val = candidate.get('integrity_score')
+            if score_val is None and isinstance(candidate.get('summary'), dict):
+                score_val = candidate.get('summary', {}).get('score_estimate_out_of_100')
+
+            parsed_score = _to_int(score_val)
+            if parsed_score is not None:
+                actual_integrity_score = parsed_score
+                parsed_detected = _to_bool(candidate.get('anomaly_detected'))
+                actual_anomaly_detected = parsed_detected if parsed_detected is not None else (actual_integrity_score < 90)
+                status_val = candidate.get('status')
+                if isinstance(status_val, str) and status_val.strip():
+                    actual_status = status_val.strip().lower()
+                else:
+                    actual_status = 'red' if actual_anomaly_detected else 'normal'
+                print(f"📊 Source-of-truth score found: {actual_integrity_score} (status={actual_status})")
+                break
+
+        # Secondary fallback: infer from explicit anomaly flag if score is absent.
+        if actual_integrity_score is None:
+            for candidate in candidates:
+                parsed_detected = _to_bool(candidate.get('anomaly_detected'))
+                if parsed_detected is not None:
+                    actual_anomaly_detected = parsed_detected
+                    actual_integrity_score = 75 if parsed_detected else 95
+                    actual_status = 'red' if parsed_detected else 'normal'
+                    print(f"📊 Derived score from anomaly_detected={parsed_detected}: {actual_integrity_score}")
+                    break
+
+        # Final fallback only when no forensic signal is available at all.
+        if actual_integrity_score is None:
+            actual_integrity_score = 75
+            actual_anomaly_detected = False
+            actual_status = 'normal'
+            print("⚠️ No forensic score/flag found. Using final fallback score=75, anomaly_detected=false")
+
+        if actual_anomaly_detected is None:
+            actual_anomaly_detected = actual_integrity_score < 90
+        actual_status = actual_status or ('red' if actual_anomaly_detected else 'normal')
+        actual_risk_level = 'high' if actual_anomaly_detected else 'low'
+        print(f"🔴 SOURCE OF TRUTH FINAL: score={actual_integrity_score}, anomaly_detected={actual_anomaly_detected}, status={actual_status}")
 
         # Use the extracted values to build a strong hint for Groq
         score_hint = f"""🔴 VERDICT ALREADY DETERMINED:
@@ -461,8 +497,10 @@ Your job: Explain WHY the score is {actual_integrity_score}. Do NOT change the v
 
         # Extract filename for prompt context
         report_filename = None
-        if isinstance(metadata, dict):
-            report_filename = metadata.get('originalFilename')
+        if isinstance(root_payload, dict):
+            report_filename = root_payload.get('originalFilename')
+        if not report_filename and isinstance(payload_metadata, dict):
+            report_filename = payload_metadata.get('originalFilename')
 
         # --- NEW PROMPT ---
         # This prompt is more explicit about the source of the JSON.
@@ -473,6 +511,10 @@ Your job: Explain WHY the score is {actual_integrity_score}. Do NOT change the v
 
         prompt = f"""
 You are a metadata forensics analyst. Your role is to EXPLAIN forensic findings, not make verdicts.
+
+    {report_source_description}
+
+    {score_hint}
 
 **VERDICT ALREADY DETERMINED by score-based rule:**
 - Anomaly Score: {actual_integrity_score}/100
@@ -546,56 +588,15 @@ You are a metadata forensics analyst. Your role is to EXPLAIN forensic findings,
                 temperature=0.7,
                 max_tokens=2048
             )
-            raw_response = response.choices[0].message.content.strip()
+            raw_content = response.choices[0].message.content
+            if raw_content is None:
+                raw_content = ""
+            raw_response = str(raw_content).strip()
             print("✅ Groq API success! Response length:", len(raw_response))
             print("🔹 Raw Response:", raw_response[:200] + "..." if len(raw_response) > 200 else raw_response)
         except Exception as e:
             print(f"⚠️ Groq API error: {type(e).__name__}: {str(e)}")
-            
-            # Extract actual anomaly values from tamper report for fallback
-            actual_anomaly_detected = False
-            actual_integrity_score = 75
-            actual_risk_level = "low"
-            try:
-                if isinstance(gemini_input, dict):
-                    # Try nested tamper_report first
-                    tr = gemini_input.get('tamper_report')
-                    
-                    # If not found, try direct access
-                    if not isinstance(tr, dict):
-                        tr = gemini_input
-                    
-                    if isinstance(tr, dict):
-                        actual_anomaly_detected = tr.get('anomaly_detected', False)
-                        
-                        # Try to get score from any possible field
-                        score_val = tr.get('anomaly_score')
-                        if score_val is None:
-                            score_val = tr.get('integrity_score')
-                        if score_val is None:
-                            score_val = (tr.get('summary') or {}).get('score_estimate_out_of_100')
-                        
-                        # Parse the score
-                        if score_val is not None:
-                            try:
-                                actual_integrity_score = int(score_val)
-                            except (ValueError, TypeError):
-                                try:
-                                    actual_integrity_score = int(float(score_val))
-                                except (ValueError, TypeError):
-                                    actual_integrity_score = 75
-                        
-                        # Recalculate based on score
-                        if actual_integrity_score < 90:
-                            actual_anomaly_detected = True
-                            actual_risk_level = 'high'
-                        else:
-                            actual_anomaly_detected = False
-                            actual_risk_level = 'low'
-                        
-                        print(f"✅ Fallback extraction: score={actual_integrity_score}, anomaly_detected={actual_anomaly_detected}")
-            except Exception as ex:
-                print(f"⚠️ Error in fallback extraction: {type(ex).__name__}: {str(ex)}")
+            print("⚠️ Using precomputed forensic values for fallback response")
             
             # Extract metadata for better fallback response
             metadata_summary = {"brief_summary": {"title": "File Properties Overview", "content": []}, 
