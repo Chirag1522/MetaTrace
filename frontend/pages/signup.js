@@ -110,7 +110,6 @@ const Signup = () => {
               </div>
             </div>
           </div>
-          </div>
           {/* Form Section */}
           <div className="w-full md:w-1/2 h-full flex flex-col justify-center px-6 sm:px-8 py-8 md:py-12 md:pl-8 md:pr-8 overflow-y-auto max-h-[600px]">
             <h2 className="text-xl sm:text-2xl font-black mb-2 epilogue dark:text-[#f7f7f7]">Join <strong className='text-[#ef4d31ff] dark:text-[#ff6b35]'>MetaTrace</strong> Today</h2>
