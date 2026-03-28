@@ -66,28 +66,66 @@ def calculate_file_hash(content: bytes) -> str:
     return hashlib.sha256(content).hexdigest()
 
 def extract_metadata(file_path: str) -> dict:
-    """Extract metadata using ExifTool with graceful fallback."""
+    """Extract metadata using Python libraries (piexif + exifread)."""
+    metadata = {}
     try:
-        result = subprocess.run(
-            ["exiftool", "-json", file_path],
-            capture_output=True,
-            text=True,
-            timeout=5,
-            check=False,  # ✅ Don't raise on non-zero exit
-        )
-        if result.returncode == 0 and result.stdout:
-            metadata_list = json.loads(result.stdout)
-            return metadata_list[0] if metadata_list else {}
-        else:
-            # ExifTool failed or not installed - return basic fallback
-            return {"source": "exiftool_unavailable", "filepath": file_path}
-    except (FileNotFoundError, json.JSONDecodeError, subprocess.TimeoutExpired):
-        # ExifTool not installed or JSON parsing failed - return graceful fallback
-        return {"source": "metadata_extraction_failed", "filepath": file_path}
+        # Try piexif first (works for JPEG/TIFF)
+        try:
+            import piexif
+            exif_dict = piexif.load(file_path)
+            if exif_dict:
+                # Extract main image tags
+                if "0th" in exif_dict:
+                    for tag in exif_dict["0th"]:
+                        tag_name = piexif.TAGS["0th"][tag]["name"]
+                        try:
+                            metadata[tag_name] = str(exif_dict["0th"][tag])
+                        except:
+                            pass
+                # Extract EXIF tags
+                if "Exif" in exif_dict:
+                    for tag in exif_dict["Exif"]:
+                        tag_name = piexif.TAGS["Exif"][tag]["name"]
+                        try:
+                            metadata[tag_name] = str(exif_dict["Exif"][tag])
+                        except:
+                            pass
+        except Exception as e:
+            print(f"⚠️ piexif extraction failed: {str(e)}")
+        
+        # Try exifread as fallback (works for more formats)
+        try:
+            import exifread
+            with open(file_path, 'rb') as f:
+                tags = exifread.process_file(f, details=False)
+                for tag in tags:
+                    try:
+                        metadata[tag] = str(tags[tag])
+                    except:
+                        pass
+        except Exception as e:
+            print(f"⚠️ exifread extraction failed: {str(e)}")
+        
+        # If still no metadata, add basic file info
+        if not metadata:
+            import PIL.Image
+            try:
+                with PIL.Image.open(file_path) as img:
+                    metadata["ImageFormat"] = img.format
+                    metadata["ImageSize"] = f"{img.width}x{img.height}"
+                    if img.info:
+                        metadata.update({k: str(v) for k, v in img.info.items()})
+            except:
+                pass
+        
+        if not metadata:
+            metadata = {"source": "basic_file_info", "filepath": file_path}
+            
     except Exception as e:
-        # Any other error - still be graceful
-        print(f"⚠️ Warning: Metadata extraction error: {str(e)}")
-        return {"source": "metadata_extraction_failed", "error": str(e)}
+        print(f"⚠️ Metadata extraction error: {str(e)}")
+        metadata = {"source": "metadata_extraction_failed", "error": str(e)}
+    
+    return metadata
 
 def store_metadata_on_chain(metadata: dict) -> dict:
     """Blockchain uploading is disabled in this build.
