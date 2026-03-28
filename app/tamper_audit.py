@@ -482,14 +482,23 @@ def main(path):
 
     print("-> Integrating results and scoring")
     score, reasons = integrate_and_score(report)
+    
+    # Determine anomaly_detected and status based on score
+    anomaly_detected = score < 85  # Below 85 = suspicious
+    status = 'red' if anomaly_detected else 'normal'
+    
     report['summary'] = {'score_estimate_out_of_100': score, 'reasons': reasons}
+    # ✅ ADD THESE FIELDS FOR MAIN.PY COMPATIBILITY
+    report['anomaly_score'] = int(score)
+    report['anomaly_detected'] = anomaly_detected
+    report['status'] = status
 
     out_json = base + '.tamper_report.json'
     with open(out_json, 'w') as fh:
         json.dump(report, fh, indent=2, default=str)
 
     print(f"\n✅ Report written: {out_json}")
-    print(f"Score: {score}/100")
+    print(f"Score: {score}/100 | Anomaly: {anomaly_detected} | Status: {status}")
     print(f"ELA: {base + '.ela.png'}  ENTROPY: {base + '.entropy.png'}")
     return 0
 
@@ -533,6 +542,9 @@ def analyze_image_for_anomalies(image_path):
             risk_level = "high"
             integrity_score -= 50
 
+        # Determine status (✅ ADDED for consistency)
+        status = 'red' if suspicious else 'normal'
+        
         result.update({
             "ela_stats": ela_stats,
             "entropy_stats": ent_stats,
@@ -541,6 +553,8 @@ def analyze_image_for_anomalies(image_path):
             "metadata_flags": consistency_flags,
             "susy_output": susy_output,
             "anomaly_detected": suspicious,
+            "anomaly_score": integrity_score,  # ✅ ADDED for consistency
+            "status": status,  # ✅ ADDED for consistency
             "risk_level": risk_level,
             "integrity_score": max(integrity_score, 0),
             "timestamp": now_utc_iso()
