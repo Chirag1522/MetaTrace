@@ -18,7 +18,7 @@ const transporter = nodemailer.createTransport({
 export async function sendPasswordResetEmail(email, resetLink) {
   try {
     const mailOptions = {
-      from: process.env.GMAIL_EMAIL,
+      from: `"MetaTrace Support" <${process.env.GMAIL_EMAIL}>`,
       to: email,
       subject: 'Reset your MetaTrace Password',
       html: `
